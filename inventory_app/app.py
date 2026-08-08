@@ -32,19 +32,17 @@ app.secret_key = os.environ.get("SECRET_KEY", "banik-hardware-secret-2024")
 DB_PATH  = os.path.join(EXE_DIR, "inventory.db")
 _db_url  = os.environ.get("DATABASE_URL", "").strip()
 
+# Convert postgres:// or postgresql:// to postgresql+pg8000:// for pure-Python DB driver
 if _db_url.startswith("postgres://"):
-    _db_url = _db_url.replace("postgres://", "postgresql://", 1)
+    _db_url = _db_url.replace("postgres://", "postgresql+pg8000://", 1)
+elif _db_url.startswith("postgresql://") and "+pg8000" not in _db_url and "+psycopg" not in _db_url:
+    _db_url = _db_url.replace("postgresql://", "postgresql+pg8000://", 1)
 
 IS_POSTGRES = bool(_db_url)
-
-if IS_POSTGRES:
-    try:
-        _engine = create_engine(_db_url, pool_pre_ping=True)
-    except Exception:
-        _pg8000_url = _db_url.replace("postgresql://", "postgresql+pg8000://", 1)
-        _engine = create_engine(_pg8000_url, pool_pre_ping=True)
-else:
-    _engine = create_engine(f"sqlite:///{DB_PATH}", pool_pre_ping=True)
+_engine = create_engine(
+    _db_url if IS_POSTGRES else f"sqlite:///{DB_PATH}",
+    pool_pre_ping=True,
+)
 
 ORDER_BY = "LOWER(material)" if IS_POSTGRES else "material COLLATE NOCASE"
 
@@ -157,6 +155,17 @@ def manifest():
 def service_worker():
     return send_from_directory(app.static_folder, "sw.js",
                                mimetype="application/javascript")
+
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    import traceback
+    err_tb = traceback.format_exc()
+    print("=== UNHANDLED EXCEPTION ===", file=sys.stderr)
+    print(err_tb, file=sys.stderr)
+    print("===========================", file=sys.stderr)
+    # If debug mode or explicitly caught 500
+    return f"<h2>Internal Server Error</h2><p style='color:red;'><b>{type(e).__name__}:</b> {e}</p><pre style='background:#f1f5f9;padding:12px;border-radius:6px;overflow-x:auto;'>{err_tb}</pre>", 500
 
 
 # ---------------------------------------------------------------------------
