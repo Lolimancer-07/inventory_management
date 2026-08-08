@@ -1,4 +1,4 @@
-044# -*- mode: python ; coding: utf-8 -*-
+# -*- mode: python ; coding: utf-8 -*-
 # PyInstaller ONE-FILE spec for Inventory App
 # Produces a single Inventory.exe that runs standalone.
 # Build with:  pyinstaller Inventory.spec --noconfirm
