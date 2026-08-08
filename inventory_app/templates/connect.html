@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0f172a">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/static/icon-192.png">
+<title>Stockroom · Connect</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<style>
+  body { background: #0f172a; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; font-family: 'Inter', system-ui, sans-serif; }
+  .connect-card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 20px;
+    padding: 40px 48px;
+    text-align: center;
+    max-width: 420px;
+    width: 90%;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+  }
+  .tag-mark { font-size: 2rem; font-weight: 800; color: #fff; letter-spacing: 4px; margin-bottom: 4px; }
+  .sub { color: #64748b; font-size: .85rem; margin-bottom: 32px; }
+  #qrcode { display: flex; justify-content: center; margin-bottom: 28px; }
+  #qrcode canvas, #qrcode img { border-radius: 12px; border: 6px solid #fff; }
+  .url-box {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    padding: 12px 20px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #38bdf8;
+    letter-spacing: 0.5px;
+    word-break: break-all;
+    margin-bottom: 24px;
+  }
+  .steps { text-align: left; color: #94a3b8; font-size: .88rem; line-height: 1.8; }
+  .steps b { color: #e2e8f0; }
+  .open-btn {
+    display: inline-block;
+    margin-top: 28px;
+    padding: 12px 32px;
+    background: linear-gradient(135deg, #3b82f6, #6366f1);
+    color: #fff;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: .95rem;
+    transition: opacity .2s;
+  }
+  .open-btn:hover { opacity: 0.85; }
+</style>
+</head>
+<body>
+  <div class="connect-card">
+    <div class="tag-mark">📦 STOCKROOM</div>
+    <p class="sub">Connect other devices to this inventory</p>
+
+    <div id="qrcode"></div>
+
+    <div class="url-box">{{ url }}</div>
+
+    <div class="steps">
+      <b>How to connect other devices:</b><br>
+      1. Make sure they're on the <b>same WiFi</b><br>
+      2. Scan the QR code above with their camera<br>
+      &nbsp;&nbsp;&nbsp;— or type the address in their browser<br>
+      3. In the browser, tap <b>⋮ → Add to Home Screen</b><br>
+      &nbsp;&nbsp;&nbsp;to install a shortcut icon
+    </div>
+
+    <a href="/" class="open-btn">Open Inventory →</a>
+  </div>
+
+  <script>
+    new QRCode(document.getElementById("qrcode"), {
+      text: "{{ url }}",
+      width: 220,
+      height: 220,
+      colorDark: "#0f172a",
+      colorLight: "#ffffff",
+      correctLevel: QRCode.CorrectLevel.H
+    });
+  </script>
+</body>
+</html>

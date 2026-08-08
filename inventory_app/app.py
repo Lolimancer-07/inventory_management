@@ -5,7 +5,7 @@ import socket
 from datetime import datetime
 from functools import wraps
 
-from flask import Flask, render_template, request, redirect, url_for, session, flash, g
+from flask import Flask, render_template, request, redirect, url_for, session, flash, g, send_from_directory
 from werkzeug.security import generate_password_hash, check_password_hash
 
 # ---------------------------------------------------------------------------
@@ -106,6 +106,26 @@ def admin_required(view):
 # ---------------------------------------------------------------------------
 # Routes
 # ---------------------------------------------------------------------------
+@app.route("/manifest.json")
+def manifest():
+    return send_from_directory(app.static_folder, "manifest.json",
+                               mimetype="application/manifest+json")
+
+
+@app.route("/sw.js")
+def service_worker():
+    return send_from_directory(app.static_folder, "sw.js",
+                               mimetype="application/javascript")
+
+
+@app.route("/connect")
+def connect_page():
+    """Shown on the host PC — displays QR code so other devices can connect."""
+    ip = get_local_ip()
+    url = f"http://{ip}:5000"
+    return render_template("connect.html", url=url, ip=ip)
+
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -228,13 +248,15 @@ if __name__ == "__main__":
     ip = get_local_ip()
 
     print("=" * 60)
-    print("  Inventory server is running!")
+    print("  Stockroom is running!")
     print(f"  This PC:        http://127.0.0.1:5000")
     print(f"  Other devices:  http://{ip}:5000")
+    print(f"  Connect page:   http://127.0.0.1:5000/connect")
     print("=" * 60)
 
-    # Auto-open the browser after 1.5 seconds (server needs a moment to start)
-    threading.Timer(1.5, lambda: webbrowser.open("http://127.0.0.1:5000")).start()
+    # Auto-open the connect page — shows QR code for other devices to scan
+    threading.Timer(1.5, lambda: webbrowser.open("http://127.0.0.1:5000/connect")).start()
 
     app.run(host="0.0.0.0", port=5000, debug=False)
+
 
