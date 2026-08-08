@@ -257,6 +257,6 @@ if __name__ == "__main__":
     # Auto-open the connect page — shows QR code for other devices to scan
     threading.Timer(1.5, lambda: webbrowser.open("http://127.0.0.1:5000/connect")).start()
 
-    app.run(host="0.0.0.0", port=5000, debug=False)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=False)
 
 
