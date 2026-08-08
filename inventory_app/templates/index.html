@@ -1,257 +1,267 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#0f172a">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Banik Hardware">
-<link rel="manifest" href="/manifest.json">
-<link rel="apple-touch-icon" href="/static/icon-192.png">
-<title>Banik Hardware · Inventory Ledger</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Banik Hardware">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/static/icon-192.png">
+  <title>Banik Hardware · Inventory Ledger</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
 </head>
+
 <body>
 
-<header class="topbar">
-  <div class="brand">
-    <div class="brand-logo-mark">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-logo-mark">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path
+            d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+          </path>
+          <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+          <line x1="12" y1="22.08" x2="12" y2="12"></line>
+        </svg>
+      </div>
+      <div class="brand-name">
+        BANIK HARDWARE
+        <small>Enterprise Inventory</small>
+      </div>
     </div>
-    <div class="brand-name">
-      BANIK HARDWARE
-      <small>Enterprise Inventory</small>
-    </div>
-  </div>
-  <div class="who">
-    <span class="badge badge-{{ role }}">{{ 'Admin' if role == 'admin' else 'Viewer' }}</span>
-    <span class="username">{{ username }}</span>
-    {% if role == 'admin' %}
+    <div class="who">
+      <span class="badge badge-{{ role }}">{{ 'Admin' if role == 'admin' else 'Viewer' }}</span>
+      <span class="username">{{ username }}</span>
+      {% if role == 'admin' %}
       <button type="button" class="btn-subtle" onclick="toggleUsersModal()">User Accounts</button>
-    {% else %}
+      {% else %}
       <button type="button" class="btn-subtle" onclick="togglePasswordModal()">Change Password</button>
-    {% endif %}
-    <a href="{{ url_for('logout') }}" class="logout">Sign out</a>
-  </div>
-</header>
-
-<main class="wrap">
-
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      {% for category, message in messages %}
-        <div class="flash flash-{{ category }}">{{ message }}</div>
-      {% endfor %}
-    {% endif %}
-  {% endwith %}
-
-  {% if role == 'admin' %}
-  <!-- Admin User Management Panel -->
-  <section id="users-panel" class="users-panel" style="display: none;">
-    <div class="panel-header-row">
-      <div class="panel-title">User Account Administration</div>
-      <button type="button" class="btn-close" onclick="toggleUsersModal()">✕</button>
+      {% endif %}
+      <a href="{{ url_for('logout') }}" class="logout">Sign out</a>
     </div>
-    
-    <div class="users-grid">
-      <!-- Create User Box -->
-      <div class="user-create-box">
-        <h4 class="sub-heading">Create New User Account</h4>
-        <form method="POST" action="{{ url_for('create_user') }}" class="user-form">
-          <div class="field">
-            <span class="field-label">Username</span>
-            <input type="text" name="username" placeholder="e.g. john_doe" required>
-          </div>
-          <div class="field">
-            <span class="field-label">Initial Password</span>
-            <input type="password" name="password" placeholder="Set password" required>
-          </div>
-          <div class="field">
-            <span class="field-label">Account Role</span>
-            <select name="role" class="select-role">
-              <option value="user">Viewer (Read-Only)</option>
-              <option value="admin">Administrator (Full Control)</option>
-            </select>
-          </div>
-          <button type="submit" class="btn-primary">Create User Account</button>
-        </form>
+  </header>
+
+  <main class="wrap">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="flash flash-{{ category }}">{{ message }}</div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    {% if role == 'admin' %}
+    <!-- Admin User Management Panel -->
+    <section id="users-panel" class="users-panel" style="display: none;">
+      <div class="panel-header-row">
+        <div class="panel-title">User Account Administration</div>
+        <button type="button" class="btn-close" onclick="toggleUsersModal()">✕</button>
       </div>
 
-      <!-- Existing Users List -->
-      <div class="user-list-box">
-        <h4 class="sub-heading">Active User Accounts ({{ users|length }})</h4>
-        <div class="users-table-wrapper">
-          <table class="users-table">
-            <thead>
-              <tr>
-                <th>Username</th>
-                <th>Role</th>
-                <th>Update Password</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for u in users %}
-              <tr>
-                <td class="user-name-cell">
-                  <strong>{{ u['username'] }}</strong>
-                  {% if u['username'] == username %}<span class="self-tag">(You)</span>{% endif %}
-                </td>
-                <td>
-                  <span class="badge badge-{{ u['role'] }}">{{ u['role'] }}</span>
-                </td>
-                <td>
-                  <form method="POST" action="{{ url_for('change_password') }}" class="inline-pw-form">
-                    <input type="hidden" name="username" value="{{ u['username'] }}">
-                    <input type="password" name="new_password" placeholder="New password" required>
-                    <button type="submit" class="btn-save">Set</button>
-                  </form>
-                </td>
-                <td>
-                  {% if u['username'] != username %}
-                    <form method="POST" action="{{ url_for('delete_user', username=u['username']) }}" onsubmit="return confirm('Delete user account \'{{ u['username'] }}\'?');">
+      <div class="users-grid">
+        <!-- Create User Box -->
+        <div class="user-create-box">
+          <h4 class="sub-heading">Create New User Account</h4>
+          <form method="POST" action="{{ url_for('create_user') }}" class="user-form">
+            <div class="field">
+              <span class="field-label">Username</span>
+              <input type="text" name="username" placeholder="e.g. john_doe" required>
+            </div>
+            <div class="field">
+              <span class="field-label">Initial Password</span>
+              <input type="password" name="password" placeholder="Set password" required>
+            </div>
+            <div class="field">
+              <span class="field-label">Account Role</span>
+              <select name="role" class="select-role">
+                <option value="user">Viewer (Read-Only)</option>
+                <option value="admin">Administrator (Full Control)</option>
+              </select>
+            </div>
+            <button type="submit" class="btn-primary">Create User Account</button>
+          </form>
+        </div>
+
+        <!-- Existing Users List -->
+        <div class="user-list-box">
+          <h4 class="sub-heading">Active User Accounts ({{ users|length }})</h4>
+          <div class="users-table-wrapper">
+            <table class="users-table">
+              <thead>
+                <tr>
+                  <th>Username</th>
+                  <th>Role</th>
+                  <th>Update Password</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for u in users %}
+                <tr>
+                  <td class="user-name-cell">
+                    <strong>{{ u['username'] }}</strong>
+                    {% if u['username'] == username %}<span class="self-tag">(You)</span>{% endif %}
+                  </td>
+                  <td>
+                    <span class="badge badge-{{ u['role'] }}">{{ u['role'] }}</span>
+                  </td>
+                  <td>
+                    <form method="POST" action="{{ url_for('change_password') }}" class="inline-pw-form">
+                      <input type="hidden" name="username" value="{{ u['username'] }}">
+                      <input type="password" name="new_password" placeholder="New password" required>
+                      <button type="submit" class="btn-save">Set</button>
+                    </form>
+                  </td>
+                  <td>
+                    {% if u['username'] != username %}
+                    <form method="POST" action="{{ url_for('delete_user', username=u['username']) }}"
+                      onsubmit="return confirm('Delete user account \'{{ u['username'] }}\'?');">
                       <button type="submit" class="btn-delete">Remove</button>
                     </form>
-                  {% else %}
+                    {% else %}
                     <span class="muted-text">Active</span>
-                  {% endif %}
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
-    </div>
-  </section>
-  {% else %}
-  <!-- Viewer Change Password Panel -->
-  <section id="password-panel" class="users-panel" style="display: none;">
-    <div class="panel-header-row">
-      <div class="panel-title">Change Account Password</div>
-      <button type="button" class="btn-close" onclick="togglePasswordModal()">✕</button>
-    </div>
-    <form method="POST" action="{{ url_for('change_password') }}" class="user-form" style="max-width: 400px; margin-top: 12px;">
-      <input type="hidden" name="username" value="{{ username }}">
-      <div class="field">
-        <span class="field-label">New Password</span>
-        <input type="password" name="new_password" placeholder="Enter new password" required>
+    </section>
+    {% else %}
+    <!-- Viewer Change Password Panel -->
+    <section id="password-panel" class="users-panel" style="display: none;">
+      <div class="panel-header-row">
+        <div class="panel-title">Change Account Password</div>
+        <button type="button" class="btn-close" onclick="togglePasswordModal()">✕</button>
       </div>
-      <button type="submit" class="btn-primary">Update My Password</button>
-    </form>
-  </section>
-  {% endif %}
+      <form method="POST" action="{{ url_for('change_password') }}" class="user-form"
+        style="max-width: 400px; margin-top: 12px;">
+        <input type="hidden" name="username" value="{{ username }}">
+        <div class="field">
+          <span class="field-label">New Password</span>
+          <input type="password" name="new_password" placeholder="Enter new password" required>
+        </div>
+        <button type="submit" class="btn-primary">Update My Password</button>
+      </form>
+    </section>
+    {% endif %}
 
-  {% if role == 'admin' %}
-  <!-- Admin Item Addition Panel -->
-  <section class="add-panel">
-    <div class="panel-title">New Item Registration</div>
-    <form method="POST" action="{{ url_for('add_item') }}" class="row-form">
-      <div class="field">
-        <span class="field-label">Material Name</span>
-        <input type="text" name="material" placeholder="e.g. Steel Pipe, Cement Bag" required>
+    {% if role == 'admin' %}
+    <!-- Admin Item Addition Panel -->
+    <section class="add-panel">
+      <div class="panel-title">New Item Registration</div>
+      <form method="POST" action="{{ url_for('add_item') }}" class="row-form">
+        <div class="field">
+          <span class="field-label">Material Name</span>
+          <input type="text" name="material" placeholder="e.g. Steel Pipe, Cement Bag" required>
+        </div>
+        <div class="field">
+          <span class="field-label">Buying Price</span>
+          <input type="number" step="0.01" min="0" name="buying_price" placeholder="0.00" required>
+        </div>
+        <div class="field">
+          <span class="field-label">Wholesale Price</span>
+          <input type="number" step="0.01" min="0" name="wholesale_price" placeholder="0.00" required>
+        </div>
+        <div class="field">
+          <span class="field-label">Retail Price</span>
+          <input type="number" step="0.01" min="0" name="retail_price" placeholder="0.00" required>
+        </div>
+        <div class="field">
+          <span class="field-label">&nbsp;</span>
+          <button type="submit" class="btn-add">Add Item</button>
+        </div>
+      </form>
+    </section>
+    {% else %}
+    <!-- Viewer Info Summary Panel -->
+    <section class="add-panel viewer-info-panel">
+      <div class="viewer-summary-row">
+        <div>
+          <div class="panel-title">Inventory Directory &amp; Live Catalog</div>
+          <p class="viewer-summary-sub">Material pricing overview: Buying price, Wholesale rate, and Retail pricing.</p>
+        </div>
+        <div class="viewer-actions">
+          <button type="button" class="btn-subtle-dark" onclick="window.location.reload();">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;">
+              <polyline points="23 4 23 10 17 10"></polyline>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+            </svg>
+            Refresh Catalog
+          </button>
+        </div>
       </div>
-      <div class="field">
-        <span class="field-label">Buying Price</span>
-        <input type="number" step="0.01" min="0" name="buying_price" placeholder="0.00" required>
-      </div>
-      <div class="field">
-        <span class="field-label">Wholesale Price</span>
-        <input type="number" step="0.01" min="0" name="wholesale_price" placeholder="0.00" required>
-      </div>
-      <div class="field">
-        <span class="field-label">Retail Price</span>
-        <input type="number" step="0.01" min="0" name="retail_price" placeholder="0.00" required>
-      </div>
-      <div class="field">
-        <span class="field-label">&nbsp;</span>
-        <button type="submit" class="btn-add">Add Item</button>
-      </div>
-    </form>
-  </section>
-  {% else %}
-  <!-- Viewer Info Summary Panel -->
-  <section class="add-panel viewer-info-panel">
-    <div class="viewer-summary-row">
-      <div>
-        <div class="panel-title">Inventory Directory &amp; Live Catalog</div>
-        <p class="viewer-summary-sub">Material pricing overview: Buying price, Wholesale rate, and Retail pricing.</p>
-      </div>
-      <div class="viewer-actions">
-        <button type="button" class="btn-subtle-dark" onclick="window.location.reload();">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
-          Refresh Catalog
-        </button>
-      </div>
-    </div>
-  </section>
-  {% endif %}
+    </section>
+    {% endif %}
 
-  <section class="table-panel">
-    <div class="search-bar">
-      <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-      <input
-        id="search-input"
-        type="search"
-        placeholder="Filter materials by name..."
-        autocomplete="off"
-        aria-label="Search materials"
-      >
-      <div class="search-sep"></div>
-      <span id="search-count" class="search-count" aria-live="polite"></span>
-    </div>
+    <section class="table-panel">
+      <div class="search-bar">
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input id="search-input" type="search" placeholder="Filter materials by name..." autocomplete="off"
+          aria-label="Search materials">
+        <div class="search-sep"></div>
+        <span id="search-count" class="search-count" aria-live="polite"></span>
+      </div>
 
-    <div class="table-responsive-container">
-      <table class="ledger">
-        <thead>
-          <tr>
-            <th class="col-mat">Material</th>
-            <th class="th-buy col-num-hdr">Buying Price</th>
-            <th class="th-ws col-num-hdr">Wholesale Price</th>
-            <th class="th-ret col-num-hdr">Retail Price</th>
-            <th class="th-upd col-date-hdr">Last Modified</th>
-            {% if role == 'admin' %}<th class="th-acts">Actions</th>{% endif %}
-          </tr>
-        </thead>
-        <tbody>
-          {% for item in items %}
-          <tr data-material="{{ item['material']|lower }}" style="--row-i: {{ loop.index }}">
+      <div class="table-responsive-container">
+        <table class="ledger">
+          <thead>
+            <tr>
+              <th class="col-mat">Material</th>
+              <th class="th-buy col-num-hdr">Buying Price</th>
+              <th class="th-ws col-num-hdr">Wholesale Price</th>
+              <th class="th-ret col-num-hdr">Retail Price</th>
+              <th class="th-upd col-date-hdr">Last Modified</th>
+              {% if role == 'admin' %}<th class="th-acts">Actions</th>{% endif %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in items %}
+            <tr data-material="{{ item['material']|lower }}" style="--row-i: {{ loop.index }}">
 
-            {% if role == 'admin' %}
+              {% if role == 'admin' %}
               <td class="material-cell col-mat">
-                <input form="edit-{{ item['id'] }}" type="text" name="material"
-                       value="{{ item['material'] }}" required>
+                <input form="edit-{{ item['id'] }}" type="text" name="material" value="{{ item['material'] }}" required>
               </td>
               <td class="col-num">
-                <input form="edit-{{ item['id'] }}" type="number" step="0.01" min="0"
-                       name="buying_price" value="{{ item['buying_price'] }}" required>
+                <input form="edit-{{ item['id'] }}" type="number" step="0.01" min="0" name="buying_price"
+                  value="{{ item['buying_price'] }}" required>
               </td>
               <td class="col-num">
-                <input form="edit-{{ item['id'] }}" type="number" step="0.01" min="0"
-                       name="wholesale_price" value="{{ item['wholesale_price'] }}" required>
+                <input form="edit-{{ item['id'] }}" type="number" step="0.01" min="0" name="wholesale_price"
+                  value="{{ item['wholesale_price'] }}" required>
               </td>
               <td class="col-num">
-                <input form="edit-{{ item['id'] }}" type="number" step="0.01" min="0"
-                       name="retail_price" value="{{ item['retail_price'] }}" required>
+                <input form="edit-{{ item['id'] }}" type="number" step="0.01" min="0" name="retail_price"
+                  value="{{ item['retail_price'] }}" required>
               </td>
               <td class="col-date">{{ item['updated_at'] }}</td>
               <td class="col-actions">
-                <form id="edit-{{ item['id'] }}" method="POST"
-                      action="{{ url_for('edit_item', item_id=item['id']) }}"
-                      class="inline-form">
+                <form id="edit-{{ item['id'] }}" method="POST" action="{{ url_for('edit_item', item_id=item['id']) }}"
+                  class="inline-form">
                   <button type="submit" class="btn-save">Save</button>
                 </form>
-                <form method="POST"
-                      action="{{ url_for('delete_item', item_id=item['id']) }}"
-                      class="inline-form"
-                      onsubmit="return confirm('Confirm deletion of \'{{ item['material'] }}\'?')">
+                <form method="POST" action="{{ url_for('delete_item', item_id=item['id']) }}" class="inline-form"
+                  onsubmit="return confirm('Confirm deletion of \'{{ item['material'] }}\'?')">
                   <button type="submit" class="btn-delete">Delete</button>
                 </form>
               </td>
 
-            {% else %}
+              {% else %}
               <td class="material-cell col-mat">
                 <span class="material-title">{{ item['material'] }}</span>
               </td>
@@ -267,111 +277,119 @@
               <td class="col-date">
                 <span class="date-val">{{ item['updated_at'] }}</span>
               </td>
-            {% endif %}
+              {% endif %}
 
-          </tr>
-          {% else %}
-          <tr class="empty-row">
-            <td colspan="{{ 6 if role == 'admin' else 5 }}">
-              <div class="empty">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--muted); margin-bottom: 12px;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
-                <p>No inventory records found.</p>
-                {% if role == 'admin' %}
+            </tr>
+            {% else %}
+            <tr class="empty-row">
+              <td colspan="{{ 6 if role == 'admin' else 5 }}">
+                <div class="empty">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                    stroke-linecap="round" stroke-linejoin="round" style="color: var(--muted); margin-bottom: 12px;">
+                    <path
+                      d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+                    </path>
+                  </svg>
+                  <p>No inventory records found.</p>
+                  {% if role == 'admin' %}
                   <small>Register a new material using the form above.</small>
-                {% else %}
+                  {% else %}
                   <small>Contact an administrator to add inventory items.</small>
-                {% endif %}
-              </div>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
 
-    <div class="table-footer">
-      <span>
-        <span class="footer-chip">TOTAL <strong id="total-count" style="margin-left:4px;">{{ items|length }}</strong> ITEMS</span>
-      </span>
-      {% if role == 'admin' %}
+      <div class="table-footer">
+        <span>
+          <span class="footer-chip">TOTAL <strong id="total-count" style="margin-left:4px;">{{ items|length }}</strong>
+            ITEMS</span>
+        </span>
+        {% if role == 'admin' %}
         <span>Authenticated as <strong>{{ username }}</strong> (Administrator)</span>
-      {% else %}
+        {% else %}
         <span>Authenticated as <strong>{{ username }}</strong> (Read-Only Mode)</span>
-      {% endif %}
-    </div>
-  </section>
+        {% endif %}
+      </div>
+    </section>
 
-</main>
+  </main>
 
-<script>
-function toggleUsersModal() {
-  const panel = document.getElementById('users-panel');
-  if (panel) {
-    panel.style.display = (panel.style.display === 'none' || !panel.style.display) ? 'block' : 'none';
-  }
-}
+  <script>
+    function toggleUsersModal() {
+      const panel = document.getElementById('users-panel');
+      if (panel) {
+        panel.style.display = (panel.style.display === 'none' || !panel.style.display) ? 'block' : 'none';
+      }
+    }
 
-function togglePasswordModal() {
-  const panel = document.getElementById('password-panel');
-  if (panel) {
-    panel.style.display = (panel.style.display === 'none' || !panel.style.display) ? 'block' : 'none';
-  }
-}
+    function togglePasswordModal() {
+      const panel = document.getElementById('password-panel');
+      if (panel) {
+        panel.style.display = (panel.style.display === 'none' || !panel.style.display) ? 'block' : 'none';
+      }
+    }
 
-(function () {
-  const input    = document.getElementById('search-input');
-  const counter  = document.getElementById('search-count');
-  const tbody    = document.querySelector('table.ledger tbody');
-  const colSpan  = {{ 6 if role == 'admin' else 5 }};
-  const allRows  = Array.from(tbody.querySelectorAll('tr[data-material]'));
+    (function () {
+      const input = document.getElementById('search-input');
+      const counter = document.getElementById('search-count');
+      const tbody = document.querySelector('table.ledger tbody');
+      const colSpan = {{ 6 if role == 'admin' else 5
+    }};
+    const allRows = Array.from(tbody.querySelectorAll('tr[data-material]'));
 
-  function removeNoResults() {
-    const el = tbody.querySelector('.no-results-row');
-    if (el) el.remove();
-  }
+    function removeNoResults() {
+      const el = tbody.querySelector('.no-results-row');
+      if (el) el.remove();
+    }
 
-  function showNoResults() {
-    removeNoResults();
-    const tr = document.createElement('tr');
-    tr.className = 'no-results-row';
-    tr.innerHTML = `<td colspan="${colSpan}">
+    function showNoResults() {
+      removeNoResults();
+      const tr = document.createElement('tr');
+      tr.className = 'no-results-row';
+      tr.innerHTML = `<td colspan="${colSpan}">
       <div class="empty">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--muted); margin-bottom: 8px;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
         <p>No matching materials found.</p>
         <small>Try searching with a different term.</small>
       </div>
     </td>`;
-    tbody.appendChild(tr);
-  }
-
-  function filter() {
-    if (allRows.length === 0) return;
-    const q = input.value.trim().toLowerCase();
-    removeNoResults();
-    let visible = 0;
-
-    allRows.forEach(function (tr) {
-      const match = !q || (tr.dataset.material || '').includes(q);
-      tr.style.display = match ? '' : 'none';
-      if (match) visible++;
-    });
-
-    if (q) {
-      counter.textContent = visible === 1 ? '1 result' : `${visible} results`;
-      if (visible === 0) showNoResults();
-    } else {
-      counter.textContent = '';
+      tbody.appendChild(tr);
     }
-  }
 
-  if (input) {
-    input.addEventListener('input', filter);
-    input.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') { input.value = ''; filter(); input.blur(); }
-    });
-  }
-})();
-</script>
+    function filter() {
+      if (allRows.length === 0) return;
+      const q = input.value.trim().toLowerCase();
+      removeNoResults();
+      let visible = 0;
+
+      allRows.forEach(function (tr) {
+        const match = !q || (tr.dataset.material || '').includes(q);
+        tr.style.display = match ? '' : 'none';
+        if (match) visible++;
+      });
+
+      if (q) {
+        counter.textContent = visible === 1 ? '1 result' : `${visible} results`;
+        if (visible === 0) showNoResults();
+      } else {
+        counter.textContent = '';
+      }
+    }
+
+    if (input) {
+      input.addEventListener('input', filter);
+      input.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') { input.value = ''; filter(); input.blur(); }
+      });
+    }
+}) ();
+  </script>
 
 </body>
+
 </html>
