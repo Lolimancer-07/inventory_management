@@ -22,6 +22,8 @@ a = Analysis(
         'jinja2',
         'jinja2.ext',
         'click',
+        'sqlalchemy',
+        'sqlalchemy.dialects.sqlite',
     ],
     hookspath=[],
     hooksconfig={},

@@ -1,6 +1,6 @@
 {
-  "name": "Stockroom",
-  "short_name": "Stockroom",
+  "name": "Banik Hardware",
+  "short_name": "Banik HW",
   "description": "Material & pricing inventory ledger",
   "start_url": "/",
   "display": "standalone",

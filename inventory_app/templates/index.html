@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-title" content="Stockroom">
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" href="/static/icon-192.png">
-<title>Stockroom · Inventory</title>
+<title>Banik Hardware · Inventory</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 <script>
   if ('serviceWorker' in navigator) {
@@ -21,7 +21,7 @@
   <header class="topbar">
     <div class="brand">
       <span class="tag-hole"></span>
-      STOCKROOM
+      BANIK HARDWARE
     </div>
     <div class="who">
       <span class="badge badge-{{ role }}">{{ 'ADMIN' if role == 'admin' else 'VIEWER' }}</span>
@@ -53,6 +53,17 @@
     {% endif %}
 
     <section class="table-panel">
+      <div class="search-bar">
+        <label for="search-input" class="search-label">🔍</label>
+        <input
+          id="search-input"
+          type="search"
+          placeholder="Search materials…"
+          autocomplete="off"
+          aria-label="Search materials"
+        >
+        <span id="search-count" class="search-count" aria-live="polite"></span>
+      </div>
       <table class="ledger">
         <thead>
           <tr>
@@ -106,5 +117,57 @@
       </table>
     </section>
   </main>
+<script>
+(function () {
+  const input   = document.getElementById('search-input');
+  const counter = document.getElementById('search-count');
+  const tbody   = document.querySelector('table.ledger tbody');
+  const colSpan = {{ 6 if role == 'admin' else 5 }};
+
+  function getRows() {
+    return Array.from(tbody.querySelectorAll('tr:not(.no-results)'));
+  }
+
+  function removeNoResults() {
+    const existing = tbody.querySelector('.no-results');
+    if (existing) existing.remove();
+  }
+
+  function showNoResults() {
+    removeNoResults();
+    const tr = document.createElement('tr');
+    tr.className = 'no-results';
+    tr.innerHTML = `<td colspan="${colSpan}" class="empty">No materials match your search.</td>`;
+    tbody.appendChild(tr);
+  }
+
+  function filter() {
+    const q = input.value.trim().toLowerCase();
+    const rows = getRows();
+    // If original empty row exists just bail out
+    if (rows.length === 0) return;
+
+    removeNoResults();
+    let visible = 0;
+
+    rows.forEach(function (tr) {
+      // material is always the first td text
+      const material = (tr.querySelector('td')?.textContent || tr.querySelector('td input')?.value || '').toLowerCase();
+      const show = !q || material.includes(q);
+      tr.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+
+    if (q) {
+      counter.textContent = visible === 1 ? '1 result' : `${visible} results`;
+      if (visible === 0) showNoResults();
+    } else {
+      counter.textContent = '';
+    }
+  }
+
+  input.addEventListener('input', filter);
+})();
+</script>
 </body>
 </html>
