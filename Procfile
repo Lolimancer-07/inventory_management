@@ -1,1 +1,1 @@
-web: gunicorn --chdir inventory_app app:app
+web: gunicorn app:app
