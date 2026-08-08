@@ -147,7 +147,7 @@ body {
 .logout:hover { color: #ffffff; background: #1e293b; border-color: #475569; }
 
 /* ── Container Layout ──────────────────────────────────────── */
-.wrap { max-width: 1120px; margin: 0 auto; padding: 28px 24px 48px; }
+.wrap { max-width: 1160px; margin: 0 auto; padding: 28px 24px 48px; }
 
 /* ── Flash Notifications ───────────────────────────────────── */
 .flash {
@@ -420,13 +420,18 @@ body {
   box-shadow: 0 2px 8px rgba(37,99,235,0.25);
 }
 
-/* ── Table Panel ───────────────────────────────────────────── */
+/* ── Table Panel & Layout ──────────────────────────────────── */
 .table-panel {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.table-responsive-container {
+  overflow-x: auto;
+  width: 100%;
 }
 
 /* ── Search Bar ────────────────────────────────────────────── */
@@ -469,110 +474,144 @@ body {
   border: 1px solid var(--border);
 }
 
-/* ── Enterprise Ledger Table ───────────────────────────────── */
-table.ledger { width: 100%; border-collapse: collapse; }
+/* ── Enterprise Ledger Table & Grid Lines ───────────────────── */
+table.ledger {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: auto;
+}
 
 .ledger thead th {
-  text-align: left;
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--text2);
-  padding: 12px 18px;
-  border-bottom: 1px solid var(--border);
+  padding: 14px 18px;
+  border-bottom: 2px solid var(--border);
+  border-right: 1px solid var(--border); /* Vertical column line */
   background: #f8fafc;
   white-space: nowrap;
+  text-align: left;
 }
+.ledger thead th:last-child {
+  border-right: none;
+}
+
+/* Column Header Alignment */
+.ledger thead th.col-num-hdr {
+  text-align: right;
+  padding-right: 20px;
+}
+.ledger thead th.col-date-hdr {
+  text-align: right;
+  padding-right: 20px;
+}
+.ledger thead th.th-acts {
+  text-align: right;
+  padding-right: 20px;
+}
+
 .ledger thead .th-buy  { color: var(--blue); }
 .ledger thead .th-ws   { color: var(--purple); }
 .ledger thead .th-ret  { color: var(--green); }
-.ledger thead .th-acts { text-align: right; }
-.ledger thead .th-upd  { text-align: right; }
 
 .ledger tbody tr {
   transition: background 0.12s ease;
 }
 .ledger tbody tr:hover {
-  background: #f8fafc;
+  background: #f1f5f9;
 }
 
 .ledger td {
-  padding: 10px 18px;
+  padding: 12px 18px;
   border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border); /* Vertical column line */
   vertical-align: middle;
 }
-.ledger tbody tr:last-child td { border-bottom: none; }
-
-.material-cell { font-weight: 600; color: var(--text); }
-
-/* Read-Only Display Boxes (matches Admin inputs 100%) */
-.readonly-display-box {
-  padding: 6px 10px;
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  background: #f8fafc;
-  font-size: 13px;
-  min-height: 31px;
-  display: flex;
-  align-items: center;
+.ledger td:last-child {
+  border-right: none;
 }
-.readonly-display-box.num {
-  justify-content: flex-end;
+.ledger tbody tr:last-child td {
+  border-bottom: none;
 }
-.readonly-display-box.material-title {
+
+/* Material Column */
+.col-mat {
+  min-width: 220px;
+}
+.material-cell .material-title {
   font-weight: 600;
   color: var(--text);
-  background: #ffffff;
+  font-size: 13.5px;
+  display: block;
+  padding: 4px 0;
 }
 
-.readonly-updated-box {
-  padding: 6px 10px;
-  font-size: 11px;
-  font-family: var(--mono);
-  color: var(--muted);
+/* Numeric Price Columns */
+.col-num {
   text-align: right;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  min-height: 31px;
+  min-width: 130px;
+  padding-right: 20px !important;
 }
 
-/* Price Formatting */
-.num { font-family: var(--mono); text-align: right; font-weight: 600; font-size: 13px; }
-.price-buy  { color: var(--blue); }
-.price-ws   { color: var(--purple); }
-.price-ret  { color: var(--green); }
-
-.col-updated {
-  text-align: right;
-  color: var(--muted);
-  font-size: 11px;
+.price-val {
   font-family: var(--mono);
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: -0.01em;
+  display: inline-block;
+  padding: 4px 0;
+}
+.price-buy { color: var(--blue); }
+.price-ws  { color: var(--purple); }
+.price-ret { color: var(--green); }
+
+/* Date Column */
+.col-date {
+  text-align: right;
+  min-width: 140px;
+  padding-right: 20px !important;
+}
+.date-val {
+  color: var(--muted);
+  font-size: 11.5px;
+  font-family: var(--mono);
+  display: inline-block;
+}
+
+/* Actions Column */
+.col-actions {
+  text-align: right;
   white-space: nowrap;
+  min-width: 130px;
 }
-.col-actions { text-align: right; white-space: nowrap; }
 
-/* Inline Edit Controls */
+/* Inline Edit Inputs (Admin) */
 .ledger input[type="text"],
 .ledger input[type="number"] {
   width: 100%;
   font-family: var(--font);
   font-size: 13px;
-  padding: 6px 10px;
+  padding: 7px 10px;
   border: 1px solid var(--border);
-  border-radius: 5px;
+  border-radius: 6px;
   background: #ffffff;
   color: var(--text);
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.ledger td.col-num input[type="number"] {
+  text-align: right;
+  font-family: var(--mono);
+  font-weight: 600;
 }
 .ledger input[type="text"]:focus,
 .ledger input[type="number"]:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 2px rgba(37,99,235,0.1);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+  background: #ffffff;
 }
-.ledger td:has(input[type="number"]) input { font-family: var(--mono); }
 
 .inline-form { display: inline-block; }
 
@@ -581,7 +620,7 @@ table.ledger { width: 100%; border-collapse: collapse; }
   background: var(--accent);
   color: #ffffff;
   border: none;
-  padding: 5px 12px;
+  padding: 6px 12px;
   border-radius: 5px;
   font-size: 12px;
   font-weight: 600;
@@ -596,7 +635,7 @@ table.ledger { width: 100%; border-collapse: collapse; }
   background: transparent;
   color: var(--danger);
   border: 1px solid var(--danger-b);
-  padding: 4px 11px;
+  padding: 5px 11px;
   border-radius: 5px;
   font-size: 12px;
   font-weight: 500;
