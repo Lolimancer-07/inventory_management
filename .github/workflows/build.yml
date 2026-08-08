@@ -1,0 +1,36 @@
+name: Build Inventory EXE
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:   # allows manual trigger from GitHub website
+
+jobs:
+  build:
+    runs-on: windows-latest   # GitHub provides a free Windows machine
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install pyinstaller flask werkzeug
+
+      - name: Build EXE with PyInstaller
+        run: |
+          pyinstaller Inventory.spec --noconfirm --clean
+        working-directory: ${{ github.workspace }}/inventory_app
+
+      - name: Upload EXE as downloadable artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Inventory-EXE
+          path: inventory_app/dist/Inventory.exe
+          retention-days: 30
+

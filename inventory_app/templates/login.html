@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stockroom · Sign in</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="login-body">
+  <div class="login-card">
+    <div class="login-mark">
+      <span class="tag-hole"></span>
+      STOCKROOM
+    </div>
+    <p class="login-sub">Material &amp; pricing ledger</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" class="login-form">
+      <label>Username
+        <input type="text" name="username" autocomplete="username" autofocus required>
+      </label>
+      <label>Password
+        <input type="password" name="password" autocomplete="current-password" required>
+      </label>
+      <button type="submit">Sign in</button>
+    </form>
+  </div>
+</body>
+</html>
