@@ -1,5 +1,5 @@
-Flask==3.0.3
-Werkzeug==3.0.3
-SQLAlchemy==2.0.31
-pg8000==1.31.2
-gunicorn==21.2.0
+Flask>=3.0.0
+Werkzeug>=3.0.0
+SQLAlchemy>=2.0.0
+pg8000>=1.30.0
+gunicorn>=21.0.0
