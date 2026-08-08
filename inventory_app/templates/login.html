@@ -9,21 +9,17 @@
 <meta name="apple-mobile-web-app-title" content="Banik Hardware">
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" href="/static/icon-192.png">
-<title>Banik Hardware · Sign in</title>
+<title>Banik Hardware · Sign In</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js');
-  }
-</script>
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
 </head>
 <body class="login-body">
+
   <div class="login-card">
-    <div class="login-mark">
-      <span class="tag-hole"></span>
-      BANIK HARDWARE
-    </div>
-    <p class="login-sub">Material &amp; pricing ledger</p>
+
+    <div class="login-logo">🔧</div>
+    <div class="login-mark">Banik Hardware</div>
+    <p class="login-sub">Inventory & pricing system</p>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
@@ -33,15 +29,19 @@
       {% endif %}
     {% endwith %}
 
-    <form method="POST" class="login-form">
-      <label>Username
+    <form method="POST" class="login-form" autocomplete="on">
+      <label>
+        Username
         <input type="text" name="username" autocomplete="username" autofocus required>
       </label>
-      <label>Password
+      <label>
+        Password
         <input type="password" name="password" autocomplete="current-password" required>
       </label>
-      <button type="submit">Sign in</button>
+      <button type="submit">Sign In →</button>
     </form>
+
   </div>
+
 </body>
 </html>

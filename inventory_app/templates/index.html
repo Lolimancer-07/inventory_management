@@ -6,168 +6,225 @@
 <meta name="theme-color" content="#0f172a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Stockroom">
+<meta name="apple-mobile-web-app-title" content="Banik Hardware">
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" href="/static/icon-192.png">
 <title>Banik Hardware · Inventory</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js');
-  }
-</script>
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
 </head>
 <body>
-  <header class="topbar">
-    <div class="brand">
-      <span class="tag-hole"></span>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-icon">🔧</div>
+    <div class="brand-name">
       BANIK HARDWARE
+      <small>Inventory System</small>
     </div>
-    <div class="who">
-      <span class="badge badge-{{ role }}">{{ 'ADMIN' if role == 'admin' else 'VIEWER' }}</span>
-      <span class="username">{{ username }}</span>
-      <a href="{{ url_for('logout') }}" class="logout">Sign out</a>
-    </div>
-  </header>
+  </div>
+  <div class="who">
+    <span class="badge badge-{{ role }}">{{ 'Admin' if role == 'admin' else 'Viewer' }}</span>
+    <span class="username">{{ username }}</span>
+    <a href="{{ url_for('logout') }}" class="logout">Sign out</a>
+  </div>
+</header>
 
-  <main class="wrap">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <div class="flash flash-{{ category }}">{{ message }}</div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
+<main class="wrap">
 
-    {% if role == 'admin' %}
-    <section class="add-panel">
-      <h2>Add material</h2>
-      <form method="POST" action="{{ url_for('add_item') }}" class="row-form">
-        <input type="text" name="material" placeholder="Material name" required>
-        <input type="number" step="0.01" name="buying_price" placeholder="Buying price" required>
-        <input type="number" step="0.01" name="wholesale_price" placeholder="Wholesale price" required>
-        <input type="number" step="0.01" name="retail_price" placeholder="Retail price" required>
-        <button type="submit">Add</button>
-      </form>
-    </section>
+  {# Flash messages #}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="flash flash-{{ category }}">{{ message }}</div>
+      {% endfor %}
     {% endif %}
+  {% endwith %}
 
-    <section class="table-panel">
-      <div class="search-bar">
-        <label for="search-input" class="search-label">🔍</label>
-        <input
-          id="search-input"
-          type="search"
-          placeholder="Search materials…"
-          autocomplete="off"
-          aria-label="Search materials"
-        >
-        <span id="search-count" class="search-count" aria-live="polite"></span>
+  {# Add material — admin only #}
+  {% if role == 'admin' %}
+  <section class="add-panel">
+    <div class="panel-title">Add New Material</div>
+    <form method="POST" action="{{ url_for('add_item') }}" class="row-form">
+      <div class="field">
+        <span class="field-label">Material Name</span>
+        <input type="text" name="material" placeholder="e.g. Steel Pipe, Cement Bag…" required>
       </div>
-      <table class="ledger">
-        <thead>
-          <tr>
-            <th class="col-material">Material</th>
-            <th class="col-price">Buying price</th>
-            <th class="col-price">Wholesale price</th>
-            <th class="col-price">Retail price</th>
-            <th class="col-updated">Updated</th>
-            {% if role == 'admin' %}<th class="col-actions">Actions</th>{% endif %}
-          </tr>
-        </thead>
-        <tbody>
-          {% for item in items %}
-          <tr>
-            {% if role == 'admin' %}
-              <td>
-                <input form="row-{{ item['id'] }}" type="text" name="material" value="{{ item['material'] }}" required>
-              </td>
-              <td>
-                <input form="row-{{ item['id'] }}" type="number" step="0.01" name="buying_price" value="{{ item['buying_price'] }}" required>
-              </td>
-              <td>
-                <input form="row-{{ item['id'] }}" type="number" step="0.01" name="wholesale_price" value="{{ item['wholesale_price'] }}" required>
-              </td>
-              <td>
-                <input form="row-{{ item['id'] }}" type="number" step="0.01" name="retail_price" value="{{ item['retail_price'] }}" required>
-              </td>
-              <td class="col-updated">{{ item['updated_at'] }}</td>
-              <td class="col-actions">
-                <form id="row-{{ item['id'] }}" method="POST" action="{{ url_for('edit_item', item_id=item['id']) }}" class="inline-form">
-                  <button type="submit" class="btn-save">Save</button>
-                </form>
-                <form method="POST" action="{{ url_for('delete_item', item_id=item['id']) }}" class="inline-form" onsubmit="return confirm('Delete {{ item['material'] }}?');">
-                  <button type="submit" class="btn-delete">Delete</button>
-                </form>
-              </td>
-            {% else %}
-              <td>{{ item['material'] }}</td>
-              <td class="num">{{ '%.2f'|format(item['buying_price']) }}</td>
-              <td class="num">{{ '%.2f'|format(item['wholesale_price']) }}</td>
-              <td class="num">{{ '%.2f'|format(item['retail_price']) }}</td>
-              <td class="col-updated">{{ item['updated_at'] }}</td>
-            {% endif %}
-          </tr>
+      <div class="field">
+        <span class="field-label">Buying Price</span>
+        <input type="number" step="0.01" min="0" name="buying_price" placeholder="0.00" required>
+      </div>
+      <div class="field">
+        <span class="field-label">Wholesale</span>
+        <input type="number" step="0.01" min="0" name="wholesale_price" placeholder="0.00" required>
+      </div>
+      <div class="field">
+        <span class="field-label">Retail</span>
+        <input type="number" step="0.01" min="0" name="retail_price" placeholder="0.00" required>
+      </div>
+      <div class="field">
+        <span class="field-label">&nbsp;</span>
+        <button type="submit" class="btn-add">＋ Add</button>
+      </div>
+    </form>
+  </section>
+  {% endif %}
+
+  {# Inventory table #}
+  <section class="table-panel">
+    <div class="search-bar">
+      <span class="search-icon">🔍</span>
+      <input
+        id="search-input"
+        type="search"
+        placeholder="Search materials…"
+        autocomplete="off"
+        aria-label="Search materials"
+      >
+      <div class="search-sep"></div>
+      <span id="search-count" class="search-count" aria-live="polite"></span>
+    </div>
+
+    <table class="ledger">
+      <thead>
+        <tr>
+          <th>Material</th>
+          <th class="col-price">Buying Price</th>
+          <th class="col-price">Wholesale</th>
+          <th class="col-price">Retail</th>
+          <th class="col-updated">Last Updated</th>
+          {% if role == 'admin' %}<th class="col-actions">Actions</th>{% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr data-material="{{ item['material']|lower }}">
+
+          {% if role == 'admin' %}
+            <td class="material-cell">
+              <input form="edit-{{ item['id'] }}" type="text" name="material"
+                     value="{{ item['material'] }}" required>
+            </td>
+            <td>
+              <input form="edit-{{ item['id'] }}" type="number" step="0.01" min="0"
+                     name="buying_price" value="{{ item['buying_price'] }}" required>
+            </td>
+            <td>
+              <input form="edit-{{ item['id'] }}" type="number" step="0.01" min="0"
+                     name="wholesale_price" value="{{ item['wholesale_price'] }}" required>
+            </td>
+            <td>
+              <input form="edit-{{ item['id'] }}" type="number" step="0.01" min="0"
+                     name="retail_price" value="{{ item['retail_price'] }}" required>
+            </td>
+            <td class="col-updated">{{ item['updated_at'] }}</td>
+            <td class="col-actions">
+              <form id="edit-{{ item['id'] }}" method="POST"
+                    action="{{ url_for('edit_item', item_id=item['id']) }}"
+                    class="inline-form">
+                <button type="submit" class="btn-save">Save</button>
+              </form>
+              <form method="POST"
+                    action="{{ url_for('delete_item', item_id=item['id']) }}"
+                    class="inline-form"
+                    onsubmit="return confirm('Delete \'{{ item['material'] }}\'?')">
+                <button type="submit" class="btn-delete">Delete</button>
+              </form>
+            </td>
+
           {% else %}
-          <tr>
-            <td colspan="{{ 6 if role == 'admin' else 5 }}" class="empty">No materials yet.</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </section>
-  </main>
+            <td class="material-cell">{{ item['material'] }}</td>
+            <td class="num">{{ '%.2f'|format(item['buying_price']) }}</td>
+            <td class="num">{{ '%.2f'|format(item['wholesale_price']) }}</td>
+            <td class="num">{{ '%.2f'|format(item['retail_price']) }}</td>
+            <td class="col-updated">{{ item['updated_at'] }}</td>
+          {% endif %}
+
+        </tr>
+        {% else %}
+        <tr class="empty-row">
+          <td colspan="{{ 6 if role == 'admin' else 5 }}">
+            <span class="empty-icon">📦</span>
+            No materials added yet.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="table-footer">
+      <span>Total: <strong id="total-count">{{ items|length }}</strong> material{{ 's' if items|length != 1 else '' }}</span>
+      {% if role == 'admin' %}
+        <span>You are editing as <strong>{{ username }}</strong></span>
+      {% else %}
+        <span>View-only mode</span>
+      {% endif %}
+    </div>
+  </section>
+
+</main>
+
 <script>
 (function () {
   const input   = document.getElementById('search-input');
   const counter = document.getElementById('search-count');
   const tbody   = document.querySelector('table.ledger tbody');
   const colSpan = {{ 6 if role == 'admin' else 5 }};
-
-  function getRows() {
-    return Array.from(tbody.querySelectorAll('tr:not(.no-results)'));
-  }
+  const totalRows = Array.from(tbody.querySelectorAll('tr[data-material]'));
 
   function removeNoResults() {
-    const existing = tbody.querySelector('.no-results');
-    if (existing) existing.remove();
+    const el = tbody.querySelector('.no-results-row');
+    if (el) el.remove();
   }
 
   function showNoResults() {
     removeNoResults();
     const tr = document.createElement('tr');
-    tr.className = 'no-results';
-    tr.innerHTML = `<td colspan="${colSpan}" class="empty">No materials match your search.</td>`;
+    tr.className = 'no-results-row';
+    tr.innerHTML = `<td colspan="${colSpan}" class="empty">
+      <span class="empty-icon">🔎</span>No materials match your search.
+    </td>`;
     tbody.appendChild(tr);
   }
 
   function filter() {
     const q = input.value.trim().toLowerCase();
-    const rows = getRows();
-    // If original empty row exists just bail out
-    if (rows.length === 0) return;
+
+    // No items at all — nothing to filter
+    if (totalRows.length === 0) return;
 
     removeNoResults();
     let visible = 0;
 
-    rows.forEach(function (tr) {
-      // material is always the first td text
-      const material = (tr.querySelector('td')?.textContent || tr.querySelector('td input')?.value || '').toLowerCase();
-      const show = !q || material.includes(q);
-      tr.style.display = show ? '' : 'none';
-      if (show) visible++;
+    totalRows.forEach(function (tr) {
+      /* ── Search fix ──────────────────────────────────────────
+         Use the data-material attribute set by the server — works
+         for both admin (inline inputs) and viewer (plain text).
+      ──────────────────────────────────────────────────────── */
+      const material = tr.dataset.material || '';
+      const match    = !q || material.includes(q);
+      tr.style.display = match ? '' : 'none';
+      if (match) visible++;
     });
 
     if (q) {
       counter.textContent = visible === 1 ? '1 result' : `${visible} results`;
+      counter.style.opacity = '1';
       if (visible === 0) showNoResults();
     } else {
       counter.textContent = '';
+      counter.style.opacity = '0';
     }
   }
 
   input.addEventListener('input', filter);
+
+  // Clear search on Escape
+  input.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { input.value = ''; filter(); input.blur(); }
+  });
 })();
 </script>
+
 </body>
 </html>
