@@ -93,7 +93,7 @@ def init_db():
         conn.commit()
 
 
-# Run on startup (works for gunicorn, direct run, and PyInstaller EXE)
+# Run on startup
 init_db()
 
 
@@ -113,7 +113,7 @@ def admin_required(view):
     @wraps(view)
     def wrapped(*args, **kwargs):
         if session.get("role") != "admin":
-            flash("You don't have permission to do that.", "error")
+            flash("You don't have permission to perform that action.", "error")
             return redirect(url_for("dashboard"))
         return view(*args, **kwargs)
     return wrapped
@@ -135,7 +135,7 @@ def service_worker():
 
 
 # ---------------------------------------------------------------------------
-# Routes — app
+# Routes — Authentication & Dashboard
 # ---------------------------------------------------------------------------
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -167,14 +167,25 @@ def dashboard():
     items = db.execute(
         text(f"SELECT * FROM inventory ORDER BY {ORDER_BY}")
     ).mappings().fetchall()
+    
+    users = []
+    if session.get("role") == "admin":
+        users = db.execute(
+            text("SELECT username, role FROM users ORDER BY username")
+        ).mappings().fetchall()
+
     return render_template(
         "index.html",
         items=items,
+        users=users,
         role=session.get("role"),
         username=session.get("username"),
     )
 
 
+# ---------------------------------------------------------------------------
+# Routes — Inventory Management
+# ---------------------------------------------------------------------------
 @app.route("/add", methods=["POST"])
 @login_required
 @admin_required
@@ -185,7 +196,7 @@ def add_item():
         wholesale = float(request.form.get("wholesale_price", 0))
         retail    = float(request.form.get("retail_price", 0))
     except ValueError:
-        flash("Prices must be numbers.", "error")
+        flash("Prices must be valid numbers.", "error")
         return redirect(url_for("dashboard"))
 
     if not material:
@@ -201,7 +212,7 @@ def add_item():
          "u": datetime.now().strftime("%Y-%m-%d %H:%M")},
     )
     db.commit()
-    flash(f"Added '{material}'.", "success")
+    flash(f"Added item '{material}'.", "success")
     return redirect(url_for("dashboard"))
 
 
@@ -215,7 +226,7 @@ def edit_item(item_id):
         wholesale = float(request.form.get("wholesale_price", 0))
         retail    = float(request.form.get("retail_price", 0))
     except ValueError:
-        flash("Prices must be numbers.", "error")
+        flash("Prices must be valid numbers.", "error")
         return redirect(url_for("dashboard"))
 
     db = get_db()
@@ -228,7 +239,7 @@ def edit_item(item_id):
          "u": datetime.now().strftime("%Y-%m-%d %H:%M"), "id": item_id},
     )
     db.commit()
-    flash(f"Updated '{material}'.", "success")
+    flash(f"Updated item '{material}'.", "success")
     return redirect(url_for("dashboard"))
 
 
@@ -243,7 +254,91 @@ def delete_item(item_id):
     db.execute(text("DELETE FROM inventory WHERE id = :id"), {"id": item_id})
     db.commit()
     if row:
-        flash(f"Deleted '{row['material']}'.", "success")
+        flash(f"Deleted item '{row['material']}'.", "success")
+    return redirect(url_for("dashboard"))
+
+
+# ---------------------------------------------------------------------------
+# Routes — User Account Management
+# ---------------------------------------------------------------------------
+@app.route("/users/create", methods=["POST"])
+@login_required
+@admin_required
+def create_user():
+    username = request.form.get("username", "").strip()
+    password = request.form.get("password", "")
+    role     = request.form.get("role", "user").strip()
+
+    if not username or not password:
+        flash("Username and password are required.", "error")
+        return redirect(url_for("dashboard"))
+
+    if role not in ("admin", "user"):
+        role = "user"
+
+    db = get_db()
+    existing = db.execute(
+        text("SELECT username FROM users WHERE username = :u"), {"u": username}
+    ).fetchone()
+    if existing:
+        flash(f"User '{username}' already exists.", "error")
+        return redirect(url_for("dashboard"))
+
+    db.execute(
+        text("INSERT INTO users (username, password_hash, role) VALUES (:u, :p, :r)"),
+        {"u": username, "p": generate_password_hash(password), "r": role}
+    )
+    db.commit()
+    flash(f"User '{username}' created successfully as {role.upper()}.", "success")
+    return redirect(url_for("dashboard"))
+
+
+@app.route("/users/change-password", methods=["POST"])
+@login_required
+def change_password():
+    target_username = request.form.get("username", "").strip()
+    new_password    = request.form.get("new_password", "")
+
+    if not new_password:
+        flash("New password cannot be empty.", "error")
+        return redirect(url_for("dashboard"))
+
+    # Non-admin users can only change their own password
+    if session.get("role") != "admin":
+        target_username = session.get("username")
+    elif not target_username:
+        target_username = session.get("username")
+
+    db = get_db()
+    user = db.execute(
+        text("SELECT username FROM users WHERE username = :u"), {"u": target_username}
+    ).fetchone()
+
+    if not user:
+        flash("User not found.", "error")
+        return redirect(url_for("dashboard"))
+
+    db.execute(
+        text("UPDATE users SET password_hash = :p WHERE username = :u"),
+        {"p": generate_password_hash(new_password), "u": target_username}
+    )
+    db.commit()
+    flash(f"Password updated for '{target_username}'.", "success")
+    return redirect(url_for("dashboard"))
+
+
+@app.route("/users/delete/<path:username>", methods=["POST"])
+@login_required
+@admin_required
+def delete_user(username):
+    if username == session.get("username"):
+        flash("You cannot delete your own active account.", "error")
+        return redirect(url_for("dashboard"))
+
+    db = get_db()
+    db.execute(text("DELETE FROM users WHERE username = :u"), {"u": username})
+    db.commit()
+    flash(f"User account '{username}' removed.", "success")
     return redirect(url_for("dashboard"))
 
 
