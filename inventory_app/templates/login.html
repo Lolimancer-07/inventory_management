@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#0f172a">
+<meta name="theme-color" content="#0c1220">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Banik Hardware">
@@ -19,7 +19,7 @@
 
     <div class="login-logo">🔧</div>
     <div class="login-mark">Banik Hardware</div>
-    <p class="login-sub">Inventory & pricing system</p>
+    <p class="login-sub">Inventory &amp; pricing ledger</p>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
@@ -40,6 +40,12 @@
       </label>
       <button type="submit">Sign In →</button>
     </form>
+
+    <div class="login-divider">Credentials</div>
+    <p class="login-hint">
+      Admin: <strong>admin</strong> / <strong>admin123</strong><br>
+      Viewer: <strong>user</strong> / <strong>user123</strong>
+    </p>
 
   </div>
 

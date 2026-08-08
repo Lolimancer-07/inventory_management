@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#0f172a">
+<meta name="theme-color" content="#0c1220">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Banik Hardware">
@@ -32,7 +32,6 @@
 
 <main class="wrap">
 
-  {# Flash messages #}
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
       {% for category, message in messages %}
@@ -41,7 +40,6 @@
     {% endif %}
   {% endwith %}
 
-  {# Add material — admin only #}
   {% if role == 'admin' %}
   <section class="add-panel">
     <div class="panel-title">Add New Material</div>
@@ -64,13 +62,12 @@
       </div>
       <div class="field">
         <span class="field-label">&nbsp;</span>
-        <button type="submit" class="btn-add">＋ Add</button>
+        <button type="submit" class="btn-add">＋ Add Item</button>
       </div>
     </form>
   </section>
   {% endif %}
 
-  {# Inventory table #}
   <section class="table-panel">
     <div class="search-bar">
       <span class="search-icon">🔍</span>
@@ -89,16 +86,16 @@
       <thead>
         <tr>
           <th>Material</th>
-          <th class="col-price">Buying Price</th>
-          <th class="col-price">Wholesale</th>
-          <th class="col-price">Retail</th>
-          <th class="col-updated">Last Updated</th>
-          {% if role == 'admin' %}<th class="col-actions">Actions</th>{% endif %}
+          <th class="th-buy">Buying Price</th>
+          <th class="th-ws">Wholesale</th>
+          <th class="th-ret">Retail</th>
+          <th class="th-upd">Updated</th>
+          {% if role == 'admin' %}<th class="th-acts">Actions</th>{% endif %}
         </tr>
       </thead>
       <tbody>
         {% for item in items %}
-        <tr data-material="{{ item['material']|lower }}">
+        <tr data-material="{{ item['material']|lower }}" style="--row-i: {{ loop.index }}">
 
           {% if role == 'admin' %}
             <td class="material-cell">
@@ -134,9 +131,9 @@
 
           {% else %}
             <td class="material-cell">{{ item['material'] }}</td>
-            <td class="num">{{ '%.2f'|format(item['buying_price']) }}</td>
-            <td class="num">{{ '%.2f'|format(item['wholesale_price']) }}</td>
-            <td class="num">{{ '%.2f'|format(item['retail_price']) }}</td>
+            <td class="num price-buy">{{ '%.2f'|format(item['buying_price']) }}</td>
+            <td class="num price-ws">{{ '%.2f'|format(item['wholesale_price']) }}</td>
+            <td class="num price-ret">{{ '%.2f'|format(item['retail_price']) }}</td>
             <td class="col-updated">{{ item['updated_at'] }}</td>
           {% endif %}
 
@@ -144,8 +141,15 @@
         {% else %}
         <tr class="empty-row">
           <td colspan="{{ 6 if role == 'admin' else 5 }}">
-            <span class="empty-icon">📦</span>
-            No materials added yet.
+            <div class="empty">
+              <span class="empty-icon">📦</span>
+              <p>No materials added yet.</p>
+              {% if role == 'admin' %}
+                <small>Use the form above to add your first item.</small>
+              {% else %}
+                <small>Ask your admin to add inventory items.</small>
+              {% endif %}
+            </div>
           </td>
         </tr>
         {% endfor %}
@@ -153,11 +157,13 @@
     </table>
 
     <div class="table-footer">
-      <span>Total: <strong id="total-count">{{ items|length }}</strong> material{{ 's' if items|length != 1 else '' }}</span>
+      <span>
+        <span class="footer-chip">📦 <strong id="total-count">{{ items|length }}</strong> item{{ 's' if items|length != 1 else '' }}</span>
+      </span>
       {% if role == 'admin' %}
-        <span>You are editing as <strong>{{ username }}</strong></span>
+        <span>Editing as <strong>{{ username }}</strong></span>
       {% else %}
-        <span>View-only mode</span>
+        <span>View-only — contact admin to make changes</span>
       {% endif %}
     </div>
   </section>
@@ -166,11 +172,11 @@
 
 <script>
 (function () {
-  const input   = document.getElementById('search-input');
-  const counter = document.getElementById('search-count');
-  const tbody   = document.querySelector('table.ledger tbody');
-  const colSpan = {{ 6 if role == 'admin' else 5 }};
-  const totalRows = Array.from(tbody.querySelectorAll('tr[data-material]'));
+  const input    = document.getElementById('search-input');
+  const counter  = document.getElementById('search-count');
+  const tbody    = document.querySelector('table.ledger tbody');
+  const colSpan  = {{ 6 if role == 'admin' else 5 }};
+  const allRows  = Array.from(tbody.querySelectorAll('tr[data-material]'));
 
   function removeNoResults() {
     const el = tbody.querySelector('.no-results-row');
@@ -181,45 +187,38 @@
     removeNoResults();
     const tr = document.createElement('tr');
     tr.className = 'no-results-row';
-    tr.innerHTML = `<td colspan="${colSpan}" class="empty">
-      <span class="empty-icon">🔎</span>No materials match your search.
+    tr.innerHTML = `<td colspan="${colSpan}">
+      <div class="empty">
+        <span class="empty-icon">🔎</span>
+        <p>No materials match your search.</p>
+        <small>Try a different keyword.</small>
+      </div>
     </td>`;
     tbody.appendChild(tr);
   }
 
   function filter() {
+    if (allRows.length === 0) return;
     const q = input.value.trim().toLowerCase();
-
-    // No items at all — nothing to filter
-    if (totalRows.length === 0) return;
-
     removeNoResults();
     let visible = 0;
 
-    totalRows.forEach(function (tr) {
-      /* ── Search fix ──────────────────────────────────────────
-         Use the data-material attribute set by the server — works
-         for both admin (inline inputs) and viewer (plain text).
-      ──────────────────────────────────────────────────────── */
-      const material = tr.dataset.material || '';
-      const match    = !q || material.includes(q);
+    allRows.forEach(function (tr) {
+      /* Uses server-set data-material — works for both admin (inputs) and viewer */
+      const match = !q || (tr.dataset.material || '').includes(q);
       tr.style.display = match ? '' : 'none';
       if (match) visible++;
     });
 
     if (q) {
       counter.textContent = visible === 1 ? '1 result' : `${visible} results`;
-      counter.style.opacity = '1';
       if (visible === 0) showNoResults();
     } else {
       counter.textContent = '';
-      counter.style.opacity = '0';
     }
   }
 
   input.addEventListener('input', filter);
-
-  // Clear search on Escape
   input.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') { input.value = ''; filter(); input.blur(); }
   });
