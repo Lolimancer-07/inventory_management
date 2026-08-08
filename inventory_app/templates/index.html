@@ -145,6 +145,7 @@
   {% endif %}
 
   {% if role == 'admin' %}
+  <!-- Admin Item Addition Panel -->
   <section class="add-panel">
     <div class="panel-title">New Item Registration</div>
     <form method="POST" action="{{ url_for('add_item') }}" class="row-form">
@@ -169,6 +170,22 @@
         <button type="submit" class="btn-add">Add Item</button>
       </div>
     </form>
+  </section>
+  {% else %}
+  <!-- Viewer Info Summary Panel (matches admin card structure) -->
+  <section class="add-panel viewer-info-panel">
+    <div class="viewer-summary-row">
+      <div>
+        <div class="panel-title">Inventory Overview &amp; Live Directory</div>
+        <p class="viewer-summary-sub">Read-only catalog for materials, wholesale pricing, and retail rates.</p>
+      </div>
+      <div class="viewer-actions">
+        <button type="button" class="btn-subtle-dark" onclick="window.location.reload();">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+          Refresh Data
+        </button>
+      </div>
+    </div>
   </section>
   {% endif %}
 
@@ -234,11 +251,21 @@
             </td>
 
           {% else %}
-            <td class="material-cell">{{ item['material'] }}</td>
-            <td class="num price-buy">{{ '%.2f'|format(item['buying_price']) }}</td>
-            <td class="num price-ws">{{ '%.2f'|format(item['wholesale_price']) }}</td>
-            <td class="num price-ret">{{ '%.2f'|format(item['retail_price']) }}</td>
-            <td class="col-updated">{{ item['updated_at'] }}</td>
+            <td class="material-cell">
+              <div class="readonly-display-box material-title">{{ item['material'] }}</div>
+            </td>
+            <td>
+              <div class="readonly-display-box num price-buy">{{ '%.2f'|format(item['buying_price']) }}</div>
+            </td>
+            <td>
+              <div class="readonly-display-box num price-ws">{{ '%.2f'|format(item['wholesale_price']) }}</div>
+            </td>
+            <td>
+              <div class="readonly-display-box num price-ret">{{ '%.2f'|format(item['retail_price']) }}</div>
+            </td>
+            <td class="col-updated">
+              <div class="readonly-updated-box">{{ item['updated_at'] }}</div>
+            </td>
           {% endif %}
 
         </tr>
@@ -267,7 +294,7 @@
       {% if role == 'admin' %}
         <span>Authenticated as <strong>{{ username }}</strong> (Administrator)</span>
       {% else %}
-        <span>Read-Only Mode</span>
+        <span>Authenticated as <strong>{{ username }}</strong> (Read-Only Mode)</span>
       {% endif %}
     </div>
   </section>

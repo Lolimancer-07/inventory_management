@@ -302,7 +302,7 @@ body {
 
 .muted-text { color: var(--muted); font-size: 12px; }
 
-/* ── Add Item Panel ────────────────────────────────────────── */
+/* ── Add Item Panel & Viewer Info Card ──────────────────────── */
 .add-panel {
   background: var(--card);
   border: 1px solid var(--border);
@@ -310,6 +310,40 @@ body {
   padding: 22px 24px;
   margin-bottom: 22px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.viewer-info-panel {
+  padding: 18px 24px;
+}
+.viewer-summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.viewer-summary-row .panel-title {
+  margin-bottom: 2px;
+}
+.viewer-summary-sub {
+  font-size: 12px;
+  color: var(--text2);
+}
+
+.btn-subtle-dark {
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text2);
+  background: #f1f5f9;
+  border: 1px solid var(--border);
+  padding: 7px 13px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-subtle-dark:hover {
+  background: #e2e8f0;
+  color: var(--text);
 }
 
 .panel-title {
@@ -464,13 +498,45 @@ table.ledger { width: 100%; border-collapse: collapse; }
 }
 
 .ledger td {
-  padding: 12px 18px;
+  padding: 10px 18px;
   border-bottom: 1px solid var(--border);
   vertical-align: middle;
 }
 .ledger tbody tr:last-child td { border-bottom: none; }
 
 .material-cell { font-weight: 600; color: var(--text); }
+
+/* Read-Only Display Boxes (matches Admin inputs 100%) */
+.readonly-display-box {
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: #f8fafc;
+  font-size: 13px;
+  min-height: 31px;
+  display: flex;
+  align-items: center;
+}
+.readonly-display-box.num {
+  justify-content: flex-end;
+}
+.readonly-display-box.material-title {
+  font-weight: 600;
+  color: var(--text);
+  background: #ffffff;
+}
+
+.readonly-updated-box {
+  padding: 6px 10px;
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--muted);
+  text-align: right;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 31px;
+}
 
 /* Price Formatting */
 .num { font-family: var(--mono); text-align: right; font-weight: 600; font-size: 13px; }
