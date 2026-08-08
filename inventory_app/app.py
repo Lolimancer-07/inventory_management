@@ -32,17 +32,20 @@ app.secret_key = os.environ.get("SECRET_KEY", "banik-hardware-secret-2024")
 DB_PATH  = os.path.join(EXE_DIR, "inventory.db")
 _db_url  = os.environ.get("DATABASE_URL", "").strip()
 
-# Supabase / cloud hosts use postgres:// or postgresql:// — SQLAlchemy uses pg8000 driver
 if _db_url.startswith("postgres://"):
-    _db_url = _db_url.replace("postgres://", "postgresql+pg8000://", 1)
-elif _db_url.startswith("postgresql://"):
-    _db_url = _db_url.replace("postgresql://", "postgresql+pg8000://", 1)
+    _db_url = _db_url.replace("postgres://", "postgresql://", 1)
 
 IS_POSTGRES = bool(_db_url)
-_engine = create_engine(
-    _db_url if IS_POSTGRES else f"sqlite:///{DB_PATH}",
-    pool_pre_ping=True,
-)
+
+if IS_POSTGRES:
+    try:
+        _engine = create_engine(_db_url, pool_pre_ping=True)
+    except Exception:
+        _pg8000_url = _db_url.replace("postgresql://", "postgresql+pg8000://", 1)
+        _engine = create_engine(_pg8000_url, pool_pre_ping=True)
+else:
+    _engine = create_engine(f"sqlite:///{DB_PATH}", pool_pre_ping=True)
+
 ORDER_BY = "LOWER(material)" if IS_POSTGRES else "material COLLATE NOCASE"
 
 
@@ -95,8 +98,28 @@ def init_db():
         conn.commit()
 
 
-# Run on startup
-init_db()
+_db_initialized = False
+
+def ensure_db():
+    global _db_initialized
+    if not _db_initialized:
+        try:
+            init_db()
+            _db_initialized = True
+        except Exception as err:
+            print(f"Database init retry: {err}")
+
+@app.before_request
+def auto_init_db():
+    ensure_db()
+
+# Safe initial call on startup
+try:
+    init_db()
+    _db_initialized = True
+except Exception as err:
+    print(f"Startup DB init deferred: {err}")
+
 
 
 # ---------------------------------------------------------------------------
