@@ -561,6 +561,27 @@
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') closeVendorModal();
   });
+
+  // ── Numeric-only inputs ────────────────────────────────────────
+  // Prevents letters and symbols in all number fields
+  document.addEventListener('keydown', function (e) {
+    if (e.target.type !== 'number') return;
+    const allowed = [
+      'Backspace','Delete','Tab','Enter','Escape',
+      'ArrowLeft','ArrowRight','ArrowUp','ArrowDown',
+      'Home','End','.','-'
+    ];
+    // Allow: control combos (Ctrl+A, Ctrl+C, etc.), allowed keys, digits
+    if (e.ctrlKey || e.metaKey || allowed.includes(e.key) || /^\d$/.test(e.key)) return;
+    e.preventDefault();
+  });
+
+  // Also strip any non-numeric paste (e.g. Ctrl+V with text)
+  document.addEventListener('paste', function (e) {
+    if (e.target.type !== 'number') return;
+    const text = (e.clipboardData || window.clipboardData).getData('text');
+    if (!/^-?\d*\.?\d*$/.test(text)) e.preventDefault();
+  });
   </script>
 
 </body>
