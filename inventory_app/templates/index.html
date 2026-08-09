@@ -225,7 +225,6 @@
               <th class="th-buy col-num-hdr">Buying Price</th>
               <th class="th-ws col-num-hdr">Wholesale Price</th>
               <th class="th-ret col-num-hdr">Retail Price</th>
-              <th class="th-upd col-date-hdr">Last Modified</th>
               {% if role == 'admin' %}<th class="th-acts">Actions</th>{% endif %}
             </tr>
           </thead>
@@ -249,7 +248,6 @@
                 <input form="edit-{{ item['id'] }}" type="number" step="0.01" min="0" name="retail_price"
                   value="{{ item['retail_price'] }}" required>
               </td>
-              <td class="col-date">{{ item['updated_at'] }}</td>
               <td class="col-actions">
                 <form id="edit-{{ item['id'] }}" method="POST" action="{{ url_for('edit_item', item_id=item['id']) }}"
                   class="inline-form">
@@ -276,15 +274,12 @@
               <td class="col-num">
                 <span class="price-val price-ret">{{ '%.2f'|format(item['retail_price']) }}</span>
               </td>
-              <td class="col-date">
-                <span class="date-val">{{ item['updated_at'] }}</span>
-              </td>
               {% endif %}
 
             </tr>
             {% else %}
             <tr class="empty-row">
-              <td colspan="{{ 6 if role == 'admin' else 5 }}">
+              <td colspan="{{ 5 if role == 'admin' else 4 }}">
                 <div class="empty">
                   <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
                     stroke-linecap="round" stroke-linejoin="round" style="color: var(--muted); margin-bottom: 12px;">
@@ -342,7 +337,7 @@
     <div class="vm-header">
       <div>
         <div class="vm-title">Vendor & Payment Details</div>
-        <div class="vm-subtitle" id="vm-material-name"></div>
+        <div class="vm-subtitle"><span id="vm-material-name"></span><span id="vm-updated-at" style="opacity:0.85; margin-left:6px; font-weight:normal; font-size:11px;"></span></div>
       </div>
       <button type="button" class="vm-close" onclick="closeVendorModal()" aria-label="Close">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
@@ -410,8 +405,7 @@
       const input = document.getElementById('search-input');
       const counter = document.getElementById('search-count');
       const tbody = document.querySelector('table.ledger tbody');
-      const colSpan = {{ 6 if role == 'admin' else 5
-    }};
+      const colSpan = {{ 5 if role == 'admin' else 4 }};
     const allRows = Array.from(tbody.querySelectorAll('tr[data-material]'));
 
     function removeNoResults() {
@@ -467,6 +461,7 @@
   function openVendorModal(itemId, materialName) {
     _currentVendorId = itemId;
     document.getElementById('vm-material-name').textContent = materialName;
+    document.getElementById('vm-updated-at').textContent = '';
     document.getElementById('vm-vendor-name').value  = '';
     document.getElementById('vm-vendor-phone').value = '';
     document.getElementById('vm-total').value = '';
@@ -490,6 +485,9 @@
         document.getElementById('vm-vendor-phone').value = d.vendor_phone || '';
         document.getElementById('vm-total').value = d.total_amount || '';
         document.getElementById('vm-paid').value  = d.paid_amount  || '';
+        if (d.updated_at) {
+          document.getElementById('vm-updated-at').textContent = '• Last modified: ' + d.updated_at;
+        }
         updateLeftToPay();
         saveBtn.textContent = 'Save Details'; saveBtn.disabled = false;
       })
@@ -562,25 +560,41 @@
     if (e.key === 'Escape') closeVendorModal();
   });
 
-  // ── Numeric-only inputs ────────────────────────────────────────
-  // Prevents letters and symbols in all number fields
+  // ── Input Restriction (Numbers & Phone) ───────────────────────
   document.addEventListener('keydown', function (e) {
-    if (e.target.type !== 'number') return;
-    const allowed = [
+    const type = e.target.type;
+    if (type !== 'number' && type !== 'tel') return;
+
+    const allowedControl = [
       'Backspace','Delete','Tab','Enter','Escape',
       'ArrowLeft','ArrowRight','ArrowUp','ArrowDown',
-      'Home','End','.','-'
+      'Home','End'
     ];
-    // Allow: control combos (Ctrl+A, Ctrl+C, etc.), allowed keys, digits
-    if (e.ctrlKey || e.metaKey || allowed.includes(e.key) || /^\d$/.test(e.key)) return;
+
+    if (e.ctrlKey || e.metaKey || allowedControl.includes(e.key)) return;
+
+    if (type === 'number') {
+      const allowedKeys = ['.', '-'];
+      if (allowedKeys.includes(e.key) || /^\d$/.test(e.key)) return;
+    } else if (type === 'tel') {
+      const allowedKeys = ['+', '-', '(', ')', ' '];
+      if (allowedKeys.includes(e.key) || /^\d$/.test(e.key)) return;
+    }
+
     e.preventDefault();
   });
 
-  // Also strip any non-numeric paste (e.g. Ctrl+V with text)
+  // Also strip any non-numeric / invalid paste
   document.addEventListener('paste', function (e) {
-    if (e.target.type !== 'number') return;
+    const type = e.target.type;
+    if (type !== 'number' && type !== 'tel') return;
+
     const text = (e.clipboardData || window.clipboardData).getData('text');
-    if (!/^-?\d*\.?\d*$/.test(text)) e.preventDefault();
+    if (type === 'number' && !/^-?\d*\.?\d*$/.test(text)) {
+      e.preventDefault();
+    } else if (type === 'tel' && !/^[\d\s\+\-\(\)]*$/.test(text)) {
+      e.preventDefault();
+    }
   });
   </script>
 

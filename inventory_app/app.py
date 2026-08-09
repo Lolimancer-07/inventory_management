@@ -313,14 +313,24 @@ def vendor_get(item_id):
     from flask import jsonify
     db  = get_db()
     row = db.execute(
-        text("SELECT * FROM vendor_payments WHERE inventory_id = :id"), {"id": item_id}
+        text("""SELECT v.*, i.updated_at
+                FROM inventory i
+                LEFT JOIN vendor_payments v ON i.id = v.inventory_id
+                WHERE i.id = :id"""),
+        {"id": item_id}
     ).mappings().fetchone()
     if row:
         data = dict(row)
+        if data.get("inventory_id") is None:
+            data["inventory_id"] = item_id
+            data["vendor_name"]  = ""
+            data["vendor_phone"] = ""
+            data["total_amount"] = 0
+            data["paid_amount"]  = 0
     else:
         data = {"inventory_id": item_id, "vendor_name": "", "vendor_phone": "",
-                "total_amount": 0, "paid_amount": 0}
-    data["left_to_pay"] = round((data["total_amount"] or 0) - (data["paid_amount"] or 0), 2)
+                "total_amount": 0, "paid_amount": 0, "updated_at": ""}
+    data["left_to_pay"] = round((data.get("total_amount") or 0) - (data.get("paid_amount") or 0), 2)
     return jsonify(data)
 
 
