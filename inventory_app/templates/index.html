@@ -255,6 +255,8 @@
                   class="inline-form">
                   <button type="submit" class="btn-save">Save</button>
                 </form>
+                <button type="button" class="btn-details"
+                  onclick="openVendorModal({{ item['id'] }}, '{{ item['material']|replace("'","\\'") }}')">Details</button>
                 <form method="POST" action="{{ url_for('delete_item', item_id=item['id']) }}" class="inline-form"
                   onsubmit="return confirm('Confirm deletion of \'{{ item['material'] }}\'?')">
                   <button type="submit" class="btn-delete">Delete</button>
@@ -310,7 +312,20 @@
             ITEMS</span>
         </span>
         {% if role == 'admin' %}
-        <span>Authenticated as <strong>{{ username }}</strong> (Administrator)</span>
+        <span style="display:flex; align-items:center; gap:10px;">
+          <a href="{{ url_for('export_excel') }}" class="btn-export" id="export-excel-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:5px;">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+            Export Excel
+          </a>
+          <span>Authenticated as <strong>{{ username }}</strong> (Administrator)</span>
+        </span>
         {% else %}
         <span>Authenticated as <strong>{{ username }}</strong> (Read-Only Mode)</span>
         {% endif %}
@@ -318,6 +333,63 @@
     </section>
 
   </main>
+
+  <!-- ============================================================
+       Vendor Details Modal (admin only)
+  ============================================================ -->
+  {% if role == 'admin' %}
+  <dialog id="vendor-modal" class="vendor-modal">
+    <div class="vm-header">
+      <div>
+        <div class="vm-title">Vendor & Payment Details</div>
+        <div class="vm-subtitle" id="vm-material-name"></div>
+      </div>
+      <button type="button" class="vm-close" onclick="closeVendorModal()" aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+
+    <div class="vm-body">
+      <div class="vm-section-label">Vendor Information</div>
+      <div class="vm-row">
+        <div class="vm-field">
+          <label class="vm-label" for="vm-vendor-name">Vendor Name</label>
+          <input id="vm-vendor-name" type="text" class="vm-input" placeholder="e.g. Sharma Traders">
+        </div>
+        <div class="vm-field">
+          <label class="vm-label" for="vm-vendor-phone">Phone Number</label>
+          <input id="vm-vendor-phone" type="tel" class="vm-input" placeholder="e.g. 9876543210">
+        </div>
+      </div>
+
+      <div class="vm-section-label" style="margin-top:18px;">Payment Summary</div>
+      <div class="vm-row">
+        <div class="vm-field">
+          <label class="vm-label" for="vm-total">Total Amount (₹)</label>
+          <input id="vm-total" type="number" step="0.01" min="0" class="vm-input vm-num" placeholder="0.00">
+        </div>
+        <div class="vm-field">
+          <label class="vm-label" for="vm-paid">Amount Paid (₹)</label>
+          <input id="vm-paid" type="number" step="0.01" min="0" class="vm-input vm-num" placeholder="0.00">
+        </div>
+      </div>
+
+      <div class="vm-left-row">
+        <div class="vm-left-label">Left to Pay</div>
+        <div class="vm-left-amount" id="vm-left">₹ 0.00</div>
+      </div>
+
+      <div id="vm-error" class="vm-error" style="display:none;"></div>
+    </div>
+
+    <div class="vm-footer">
+      <button type="button" class="vm-btn-cancel" onclick="closeVendorModal()">Cancel</button>
+      <button type="button" class="vm-btn-save" id="vm-save-btn" onclick="saveVendorModal()">Save Details</button>
+    </div>
+  </dialog>
+  <div id="vendor-backdrop" class="vm-backdrop" onclick="closeVendorModal()"></div>
+  {% endif %}
 
   <script>
     function toggleUsersModal() {
@@ -388,6 +460,107 @@
       });
     }
 }) ();
+
+  // ── Vendor Modal ─────────────────────────────────────────────
+  let _currentVendorId = null;
+
+  function openVendorModal(itemId, materialName) {
+    _currentVendorId = itemId;
+    document.getElementById('vm-material-name').textContent = materialName;
+    document.getElementById('vm-vendor-name').value  = '';
+    document.getElementById('vm-vendor-phone').value = '';
+    document.getElementById('vm-total').value = '';
+    document.getElementById('vm-paid').value  = '';
+    document.getElementById('vm-left').textContent = '₹ 0.00';
+    document.getElementById('vm-left').className = 'vm-left-amount';
+    const errEl = document.getElementById('vm-error');
+    errEl.style.display = 'none'; errEl.textContent = '';
+    const saveBtn = document.getElementById('vm-save-btn');
+    saveBtn.textContent = 'Loading…'; saveBtn.disabled = true;
+
+    const modal    = document.getElementById('vendor-modal');
+    const backdrop = document.getElementById('vendor-backdrop');
+    modal.showModal();
+    backdrop.classList.add('vm-backdrop-active');
+
+    fetch(`/vendor/${itemId}`)
+      .then(r => r.json())
+      .then(d => {
+        document.getElementById('vm-vendor-name').value  = d.vendor_name  || '';
+        document.getElementById('vm-vendor-phone').value = d.vendor_phone || '';
+        document.getElementById('vm-total').value = d.total_amount || '';
+        document.getElementById('vm-paid').value  = d.paid_amount  || '';
+        updateLeftToPay();
+        saveBtn.textContent = 'Save Details'; saveBtn.disabled = false;
+      })
+      .catch(() => {
+        saveBtn.textContent = 'Save Details'; saveBtn.disabled = false;
+      });
+  }
+
+  function closeVendorModal() {
+    const modal    = document.getElementById('vendor-modal');
+    const backdrop = document.getElementById('vendor-backdrop');
+    if (modal) modal.close();
+    if (backdrop) backdrop.classList.remove('vm-backdrop-active');
+    _currentVendorId = null;
+  }
+
+  function updateLeftToPay() {
+    const total = parseFloat(document.getElementById('vm-total').value) || 0;
+    const paid  = parseFloat(document.getElementById('vm-paid').value)  || 0;
+    const left  = Math.round((total - paid) * 100) / 100;
+    const el    = document.getElementById('vm-left');
+    el.textContent = '₹ ' + left.toFixed(2);
+    el.className   = 'vm-left-amount' + (left > 0 ? ' vm-left-owing' : left < 0 ? ' vm-left-over' : '');
+  }
+
+  function saveVendorModal() {
+    if (!_currentVendorId) return;
+    const saveBtn = document.getElementById('vm-save-btn');
+    const errEl   = document.getElementById('vm-error');
+    errEl.style.display = 'none';
+    saveBtn.textContent = 'Saving…'; saveBtn.disabled = true;
+
+    const payload = {
+      vendor_name:  document.getElementById('vm-vendor-name').value.trim(),
+      vendor_phone: document.getElementById('vm-vendor-phone').value.trim(),
+      total_amount: parseFloat(document.getElementById('vm-total').value) || 0,
+      paid_amount:  parseFloat(document.getElementById('vm-paid').value)  || 0,
+    };
+
+    fetch(`/vendor/${_currentVendorId}`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload),
+    })
+    .then(r => r.json())
+    .then(d => {
+      if (d.error) {
+        errEl.textContent = d.error; errEl.style.display = 'block';
+        saveBtn.textContent = 'Save Details'; saveBtn.disabled = false;
+      } else {
+        saveBtn.textContent = '✓ Saved!';
+        setTimeout(() => { closeVendorModal(); saveBtn.textContent = 'Save Details'; saveBtn.disabled = false; }, 800);
+      }
+    })
+    .catch(() => {
+      errEl.textContent = 'Network error. Please try again.';
+      errEl.style.display = 'block';
+      saveBtn.textContent = 'Save Details'; saveBtn.disabled = false;
+    });
+  }
+
+  // Live left-to-pay update
+  ['vm-total','vm-paid'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', updateLeftToPay);
+  });
+
+  // Close on Escape key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeVendorModal();
+  });
   </script>
 
 </body>
