@@ -807,3 +807,231 @@ table.ledger {
   .row-form { grid-template-columns: 1fr; }
   .login-card { padding: 30px 20px; }
 }
+
+/* ── Details Button ─────────────────────────────────────────── */
+.btn-details {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 600;
+  color: #1a6b7a;
+  background: transparent;
+  border: 1px solid #1a6b7a;
+  padding: 6px 11px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  margin-right: 6px;
+}
+.btn-details:hover {
+  background: #1a6b7a;
+  color: #fff;
+}
+
+/* ── Export Excel Button ─────────────────────────────────────── */
+.btn-export {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 600;
+  color: #1e5c2e;
+  background: #eaf4ec;
+  border: 1px solid #3a8a50;
+  padding: 7px 14px;
+  border-radius: 5px;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+.btn-export:hover {
+  background: #3a8a50;
+  color: #fff;
+}
+
+/* ── Vendor Modal ────────────────────────────────────────────── */
+.vm-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  z-index: 99;
+  backdrop-filter: blur(2px);
+}
+.vm-backdrop-active { display: block; }
+
+.vendor-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+  width: min(520px, 94vw);
+  border: none;
+  border-radius: 12px;
+  padding: 0;
+  background: #fff;
+  box-shadow: 0 24px 60px -12px rgba(15,23,42,0.38), 0 0 0 1px rgba(0,0,0,0.06);
+  z-index: 100;
+  overflow: hidden;
+  animation: vmSlideIn 0.2s ease;
+}
+@keyframes vmSlideIn {
+  from { opacity: 0; transform: translate(-50%, -47%); }
+  to   { opacity: 1; transform: translate(-50%, -50%); }
+}
+/* hide default backdrop so ours shows */
+.vendor-modal::backdrop { background: transparent; }
+
+.vm-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 20px 22px 18px;
+  background: linear-gradient(135deg, #1F2D3D 0%, #2E4054 100%);
+  color: #fff;
+}
+.vm-title {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.vm-subtitle {
+  font-size: 12px;
+  color: #93a8be;
+  margin-top: 3px;
+}
+.vm-close {
+  background: rgba(255,255,255,0.1);
+  border: none;
+  border-radius: 6px;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.vm-close:hover { background: rgba(255,255,255,0.22); }
+
+.vm-body { padding: 20px 22px; }
+
+.vm-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text2, #6b7a8f);
+  margin-bottom: 10px;
+}
+.vm-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.vm-field { display: flex; flex-direction: column; gap: 5px; }
+.vm-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text2, #6b7a8f);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.vm-input {
+  font-family: var(--font);
+  font-size: 14px;
+  padding: 9px 11px;
+  border: 1px solid #d1d9e0;
+  border-radius: 6px;
+  background: #f8f9fb;
+  color: #1B1F23;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.vm-input:focus {
+  border-color: #E2952E;
+  box-shadow: 0 0 0 3px rgba(226,149,46,0.15);
+  background: #fff;
+}
+.vm-num { font-family: ui-monospace, monospace; }
+
+.vm-left-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+  padding: 14px 16px;
+  background: #f3f4f6;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+.vm-left-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+.vm-left-amount {
+  font-family: ui-monospace, monospace;
+  font-size: 20px;
+  font-weight: 800;
+  color: #374151;
+  letter-spacing: -0.02em;
+}
+.vm-left-owing  { color: #B4432F; }
+.vm-left-over   { color: #3F6B4E; }
+
+.vm-error {
+  margin-top: 12px;
+  padding: 9px 12px;
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: 6px;
+  color: #b91c1c;
+  font-size: 13px;
+}
+
+.vm-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 22px 18px;
+  border-top: 1px solid #f0f0f0;
+}
+.vm-btn-cancel {
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 9px 18px;
+  border-radius: 6px;
+  border: 1px solid #d1d9e0;
+  background: #fff;
+  color: #374151;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.vm-btn-cancel:hover { background: #f3f4f6; }
+.vm-btn-save {
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 9px 22px;
+  border-radius: 6px;
+  border: none;
+  background: #1F2D3D;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s;
+  min-width: 120px;
+}
+.vm-btn-save:hover:not(:disabled) { background: #2E4054; }
+.vm-btn-save:disabled { opacity: 0.6; cursor: not-allowed; }
+
+@media (max-width: 480px) {
+  .vm-row { grid-template-columns: 1fr; }
+  .vendor-modal { width: 96vw; }
+}

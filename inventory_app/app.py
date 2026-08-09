@@ -84,6 +84,16 @@ def init_db():
                 updated_at      TEXT NOT NULL
             )
         """))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS vendor_payments (
+                inventory_id  INTEGER PRIMARY KEY,
+                vendor_name   TEXT    NOT NULL DEFAULT '',
+                vendor_phone  TEXT    NOT NULL DEFAULT '',
+                total_amount  REAL    NOT NULL DEFAULT 0,
+                paid_amount   REAL    NOT NULL DEFAULT 0,
+                updated_at    TEXT    NOT NULL
+            )
+        """))
         row = conn.execute(text("SELECT username FROM users LIMIT 1")).fetchone()
         if row is None:
             conn.execute(
@@ -285,11 +295,221 @@ def delete_item(item_id):
     row = db.execute(
         text("SELECT material FROM inventory WHERE id = :id"), {"id": item_id}
     ).mappings().fetchone()
+    db.execute(text("DELETE FROM vendor_payments WHERE inventory_id = :id"), {"id": item_id})
     db.execute(text("DELETE FROM inventory WHERE id = :id"), {"id": item_id})
     db.commit()
     if row:
         flash(f"Deleted item '{row['material']}'.", "success")
     return redirect(url_for("dashboard"))
+
+
+# ---------------------------------------------------------------------------
+# Routes — Vendor Details
+# ---------------------------------------------------------------------------
+@app.route("/vendor/<int:item_id>", methods=["GET"])
+@login_required
+@admin_required
+def vendor_get(item_id):
+    from flask import jsonify
+    db  = get_db()
+    row = db.execute(
+        text("SELECT * FROM vendor_payments WHERE inventory_id = :id"), {"id": item_id}
+    ).mappings().fetchone()
+    if row:
+        data = dict(row)
+    else:
+        data = {"inventory_id": item_id, "vendor_name": "", "vendor_phone": "",
+                "total_amount": 0, "paid_amount": 0}
+    data["left_to_pay"] = round((data["total_amount"] or 0) - (data["paid_amount"] or 0), 2)
+    return jsonify(data)
+
+
+@app.route("/vendor/<int:item_id>", methods=["POST"])
+@login_required
+@admin_required
+def vendor_save(item_id):
+    from flask import jsonify
+    payload      = request.get_json(force=True) or {}
+    vendor_name  = str(payload.get("vendor_name",  "")).strip()
+    vendor_phone = str(payload.get("vendor_phone", "")).strip()
+    try:
+        total_amount = float(payload.get("total_amount", 0))
+        paid_amount  = float(payload.get("paid_amount",  0))
+    except (ValueError, TypeError):
+        return jsonify({"error": "Amounts must be numbers."}), 400
+
+    db  = get_db()
+    now = datetime.now().strftime("%Y-%m-%d %H:%M")
+    existing = db.execute(
+        text("SELECT inventory_id FROM vendor_payments WHERE inventory_id = :id"), {"id": item_id}
+    ).fetchone()
+    if existing:
+        db.execute(
+            text("""UPDATE vendor_payments
+                     SET vendor_name=:vn, vendor_phone=:vp,
+                         total_amount=:ta, paid_amount=:pa, updated_at=:ua
+                     WHERE inventory_id=:id"""),
+            {"vn": vendor_name, "vp": vendor_phone, "ta": total_amount,
+             "pa": paid_amount, "ua": now, "id": item_id},
+        )
+    else:
+        db.execute(
+            text("""INSERT INTO vendor_payments
+                     (inventory_id, vendor_name, vendor_phone, total_amount, paid_amount, updated_at)
+                     VALUES (:id, :vn, :vp, :ta, :pa, :ua)"""),
+            {"id": item_id, "vn": vendor_name, "vp": vendor_phone,
+             "ta": total_amount, "pa": paid_amount, "ua": now},
+        )
+    db.commit()
+    return jsonify({"ok": True, "left_to_pay": round(total_amount - paid_amount, 2)})
+
+
+# ---------------------------------------------------------------------------
+# Routes — Excel Export (admin only)
+# ---------------------------------------------------------------------------
+@app.route("/export")
+@login_required
+@admin_required
+def export_excel():
+    import io
+    from flask import send_file
+    import openpyxl
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+
+    db    = get_db()
+    items = db.execute(
+        text(f"SELECT * FROM inventory ORDER BY {ORDER_BY}")
+    ).mappings().fetchall()
+    vendors = db.execute(
+        text("SELECT * FROM vendor_payments")
+    ).mappings().fetchall()
+    vendor_map = {v["inventory_id"]: v for v in vendors}
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Inventory"
+
+    # Styles
+    header_font    = Font(bold=True, color="FFFFFF", size=11)
+    header_fill    = PatternFill("solid", fgColor="1F2D3D")
+    subhdr_fill    = PatternFill("solid", fgColor="2E4054")
+    subhdr_font    = Font(bold=True, color="FFFFFF", size=10)
+    center         = Alignment(horizontal="center", vertical="center")
+    right          = Alignment(horizontal="right",  vertical="center")
+    thin           = Side(style="thin", color="D2D5C9")
+    border         = Border(left=thin, right=thin, top=thin, bottom=thin)
+    amber_fill     = PatternFill("solid", fgColor="E2952E")
+    amber_font     = Font(bold=True, color="2B1D06", size=10)
+
+    # Title row
+    ws.merge_cells("A1:I1")
+    title_cell = ws["A1"]
+    title_cell.value     = "Banik Hardware — Inventory Report"
+    title_cell.font      = Font(bold=True, size=14, color="1F2D3D")
+    title_cell.alignment = center
+    ws.row_dimensions[1].height = 28
+
+    # Subtitle
+    ws.merge_cells("A2:I2")
+    sub_cell = ws["A2"]
+    sub_cell.value     = f"Exported: {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+    sub_cell.font      = Font(italic=True, size=9, color="6B7A8F")
+    sub_cell.alignment = center
+    ws.row_dimensions[2].height = 16
+
+    # Group headers row 3
+    ws.merge_cells("A3:A3"); ws["A3"].value = "#"
+    ws.merge_cells("B3:B3"); ws["B3"].value = "Material"
+    ws.merge_cells("C3:E3"); ws["C3"].value = "Pricing"
+    ws.merge_cells("F3:F3"); ws["F3"].value = "Last Modified"
+    ws.merge_cells("G3:I3"); ws["G3"].value = "Vendor & Payments"
+    for col in ["A3","B3","C3","F3","G3"]:
+        ws[col].font      = header_font
+        ws[col].fill      = header_fill
+        ws[col].alignment = center
+        ws[col].border    = border
+    ws.row_dimensions[3].height = 20
+
+    # Sub-headers row 4
+    sub_hdrs = ["#", "Material", "Buying", "Wholesale", "Retail",
+                "Modified", "Vendor Name", "Phone", "Total", "Paid", "Left to Pay"]
+    # We have 11 columns: A-K
+    # Adjust group headers
+    ws.merge_cells("C3:E3"); ws["C3"].value = "Pricing"
+    ws.merge_cells("G3:K3"); ws["G3"].value = "Vendor & Payments"
+    for cell in ["A3","B3","C3","F3","G3"]:
+        ws[cell].font      = header_font
+        ws[cell].fill      = header_fill
+        ws[cell].alignment = center
+        ws[cell].border    = border
+
+    cols = ["A","B","C","D","E","F","G","H","I","J","K"]
+    sub_labels = ["#","Material","Buying","Wholesale","Retail",
+                  "Modified","Vendor Name","Phone","Total Amt","Paid Amt","Left to Pay"]
+    for i, (col, lbl) in enumerate(zip(cols, sub_labels)):
+        cell = ws[f"{col}4"]
+        cell.value     = lbl
+        cell.font      = subhdr_font
+        cell.fill      = subhdr_fill
+        cell.alignment = center
+        cell.border    = border
+    ws.row_dimensions[4].height = 18
+
+    # Data rows starting row 5
+    num_fmt = '#,##0.00'
+    for row_i, item in enumerate(items, start=1):
+        r    = row_i + 4
+        vend = vendor_map.get(item["id"], {})
+        total = float(vend.get("total_amount", 0) or 0)
+        paid  = float(vend.get("paid_amount",  0) or 0)
+        left  = round(total - paid, 2)
+
+        row_data = [
+            row_i,
+            item["material"],
+            item["buying_price"],
+            item["wholesale_price"],
+            item["retail_price"],
+            item["updated_at"],
+            vend.get("vendor_name",  "") or "",
+            vend.get("vendor_phone", "") or "",
+            total,
+            paid,
+            left,
+        ]
+        fill_bg = PatternFill("solid", fgColor="F9F8F4") if row_i % 2 == 0 else PatternFill()
+        for col_i, (col, val) in enumerate(zip(cols, row_data)):
+            cell = ws[f"{col}{r}"]
+            cell.value  = val
+            cell.border = border
+            if fill_bg.fill_type:
+                cell.fill = fill_bg
+            if col_i in (2, 3, 4, 8, 9):   # price columns
+                cell.number_format = num_fmt
+                cell.alignment     = right
+            elif col_i == 10:               # left to pay — highlight if > 0
+                cell.number_format = num_fmt
+                cell.alignment     = right
+                if left > 0:
+                    cell.font = Font(bold=True, color="B4432F")
+            elif col_i == 0:                # row number
+                cell.alignment = center
+        ws.row_dimensions[r].height = 16
+
+    # Column widths
+    col_widths = [5, 28, 13, 13, 13, 16, 22, 15, 13, 13, 13]
+    for col, w in zip(cols, col_widths):
+        ws.column_dimensions[col].width = w
+
+    # Freeze panes below sub-headers
+    ws.freeze_panes = "A5"
+
+    buf = io.BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+    fname = f"inventory_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx"
+    return send_file(buf, as_attachment=True, download_name=fname,
+                     mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 
 # ---------------------------------------------------------------------------
