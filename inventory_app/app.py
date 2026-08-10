@@ -247,14 +247,46 @@ def add_item():
         flash("Material name is required.", "error")
         return redirect(url_for("dashboard"))
 
-    db = get_db()
-    db.execute(
-        text("""INSERT INTO inventory
-                 (material, buying_price, wholesale_price, retail_price, updated_at)
-                 VALUES (:m, :b, :w, :r, :u)"""),
-        {"m": material, "b": buying, "w": wholesale, "r": retail,
-         "u": datetime.now().strftime("%Y-%m-%d %H:%M")},
-    )
+    db  = get_db()
+    now = datetime.now().strftime("%Y-%m-%d %H:%M")
+
+    if IS_POSTGRES:
+        res = db.execute(
+            text("""INSERT INTO inventory
+                     (material, buying_price, wholesale_price, retail_price, updated_at)
+                     VALUES (:m, :b, :w, :r, :u) RETURNING id"""),
+            {"m": material, "b": buying, "w": wholesale, "r": retail, "u": now},
+        )
+        new_id = res.scalar()
+    else:
+        res = db.execute(
+            text("""INSERT INTO inventory
+                     (material, buying_price, wholesale_price, retail_price, updated_at)
+                     VALUES (:m, :b, :w, :r, :u)"""),
+            {"m": material, "b": buying, "w": wholesale, "r": retail, "u": now},
+        )
+        new_id = getattr(res, "lastrowid", None)
+        if not new_id:
+            new_id = db.execute(text("SELECT MAX(id) FROM inventory")).scalar()
+
+    vendor_name  = request.form.get("vendor_name", "").strip()
+    vendor_phone = request.form.get("vendor_phone", "").strip()
+    try:
+        total_amount = float(request.form.get("total_amount", 0) or 0)
+        paid_amount  = float(request.form.get("paid_amount", 0) or 0)
+    except (ValueError, TypeError):
+        total_amount = 0
+        paid_amount  = 0
+
+    if vendor_name or vendor_phone or total_amount or paid_amount:
+        db.execute(
+            text("""INSERT INTO vendor_payments
+                     (inventory_id, vendor_name, vendor_phone, total_amount, paid_amount, updated_at)
+                     VALUES (:id, :vn, :vp, :ta, :pa, :ua)"""),
+            {"id": new_id, "vn": vendor_name, "vp": vendor_phone,
+             "ta": total_amount, "pa": paid_amount, "ua": now},
+        )
+
     db.commit()
     flash(f"Added item '{material}'.", "success")
     return redirect(url_for("dashboard"))

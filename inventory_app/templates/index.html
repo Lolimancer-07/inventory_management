@@ -158,27 +158,53 @@
     {% if role == 'admin' %}
     <!-- Admin Item Addition Panel -->
     <section class="add-panel">
-      <div class="panel-title">New Item Registration</div>
-      <form method="POST" action="{{ url_for('add_item') }}" class="row-form">
-        <div class="field">
-          <span class="field-label">Material Name</span>
-          <input type="text" name="material" placeholder="e.g. Steel Pipe, Cement Bag" required>
+      <div class="panel-header-row" style="margin-bottom:14px;">
+        <div class="panel-title" style="margin-bottom:0;">New Item Registration</div>
+      </div>
+      <form method="POST" action="{{ url_for('add_item') }}" class="add-item-form">
+        <div class="add-item-grid">
+          <div class="field">
+            <span class="field-label">Material Name</span>
+            <input type="text" name="material" placeholder="e.g. Steel Pipe, Cement Bag" required>
+          </div>
+          <div class="field">
+            <span class="field-label">Buying Price (₹)</span>
+            <input type="number" step="0.01" min="0" name="buying_price" placeholder="0.00" required>
+          </div>
+          <div class="field">
+            <span class="field-label">Wholesale Price (₹)</span>
+            <input type="number" step="0.01" min="0" name="wholesale_price" placeholder="0.00" required>
+          </div>
+          <div class="field">
+            <span class="field-label">Retail Price (₹)</span>
+            <input type="number" step="0.01" min="0" name="retail_price" placeholder="0.00" required>
+          </div>
         </div>
-        <div class="field">
-          <span class="field-label">Buying Price</span>
-          <input type="number" step="0.01" min="0" name="buying_price" placeholder="0.00" required>
+
+        <div class="add-vendor-section">
+          <div class="add-section-subtitle">Vendor &amp; Payment Details <span class="muted-tag">(Optional)</span></div>
+          <div class="add-item-grid">
+            <div class="field">
+              <span class="field-label">Vendor Name</span>
+              <input type="text" name="vendor_name" placeholder="e.g. Sharma Traders">
+            </div>
+            <div class="field">
+              <span class="field-label">Vendor Phone</span>
+              <input type="tel" name="vendor_phone" placeholder="e.g. 9876543210">
+            </div>
+            <div class="field">
+              <span class="field-label">Total Amount (₹)</span>
+              <input type="number" step="0.01" min="0" name="total_amount" placeholder="0.00">
+            </div>
+            <div class="field">
+              <span class="field-label">Amount Paid (₹)</span>
+              <input type="number" step="0.01" min="0" name="paid_amount" placeholder="0.00">
+            </div>
+          </div>
         </div>
-        <div class="field">
-          <span class="field-label">Wholesale Price</span>
-          <input type="number" step="0.01" min="0" name="wholesale_price" placeholder="0.00" required>
-        </div>
-        <div class="field">
-          <span class="field-label">Retail Price</span>
-          <input type="number" step="0.01" min="0" name="retail_price" placeholder="0.00" required>
-        </div>
-        <div class="field">
-          <span class="field-label">&nbsp;</span>
-          <button type="submit" class="btn-add">Add Item</button>
+
+        <div class="add-form-submit-row">
+          <button type="submit" class="btn-add">Add Material &amp; Save Details</button>
         </div>
       </form>
     </section>

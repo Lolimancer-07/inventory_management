@@ -372,6 +372,48 @@ body {
   align-items: end;
 }
 
+.add-item-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.add-item-grid {
+  display: grid;
+  grid-template-columns: 2.2fr 1fr 1fr 1fr;
+  gap: 12px;
+}
+
+.add-vendor-section {
+  padding-top: 14px;
+  border-top: 1px dashed var(--border);
+}
+
+.add-section-subtitle {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text2);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.muted-tag {
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: none;
+  color: var(--muted);
+  letter-spacing: 0;
+}
+
+.add-form-submit-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
 .field { display: flex; flex-direction: column; gap: 6px; }
 .field-label {
   font-size: 11px;
@@ -381,7 +423,7 @@ body {
   letter-spacing: 0.05em;
 }
 
-.row-form input {
+.row-form input, .add-item-form input {
   font-family: var(--font);
   font-size: 13px;
   padding: 9px 12px;
@@ -392,14 +434,14 @@ body {
   width: 100%;
   transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
 }
-.row-form input:focus {
+.row-form input:focus, .add-item-form input:focus {
   outline: none;
   border-color: var(--accent);
   background: #ffffff;
   box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
 }
-.row-form input[type="number"] { font-family: var(--mono); }
-.row-form input::placeholder { color: var(--muted); }
+.row-form input[type="number"], .add-item-form input[type="number"] { font-family: var(--mono); }
+.row-form input::placeholder, .add-item-form input::placeholder { color: var(--muted); }
 
 .btn-add {
   font-family: var(--font);
@@ -407,7 +449,7 @@ body {
   color: #ffffff;
   font-weight: 600;
   font-size: 13px;
-  padding: 0 20px;
+  padding: 0 22px;
   height: 38px;
   border: none;
   border-radius: 6px;
@@ -798,13 +840,16 @@ table.ledger {
   .wrap { padding: 16px 14px 36px; }
   .topbar { padding: 0 16px; }
   .row-form { grid-template-columns: 1fr 1fr; }
-  .btn-add { grid-column: 1 / -1; width: 100%; }
+  .add-item-grid { grid-template-columns: 1fr 1fr; }
+  .btn-add { width: 100%; }
+  .add-form-submit-row { width: 100%; }
   .users-grid { grid-template-columns: 1fr; }
   table.ledger { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .username { display: none; }
 }
 @media (max-width: 480px) {
   .row-form { grid-template-columns: 1fr; }
+  .add-item-grid { grid-template-columns: 1fr; }
   .login-card { padding: 30px 20px; }
 }
 
